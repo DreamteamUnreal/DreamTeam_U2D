@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class TileInteractionManager : MonoBehaviour
@@ -49,6 +51,11 @@ public class TileInteractionManager : MonoBehaviour
         }
         // Add checks for other non-passable tiles if they are on different layers
         return true;
+    }
+
+    internal IEnumerable<Vector3Int> GetNeighborCells(Vector3Int gridPosition)
+    {
+        throw new NotImplementedException();
     }
 
     // Could add functions to query what type of "ingredient" is on an interactable tile
