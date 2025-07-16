@@ -15,7 +15,7 @@ public class PlayerController : MonoBehaviour
     public InventoryManager inventoryManager; // Assign in Inspector
     public CraftingManager craftingManager;   // Assign in Inspector
 
-    private IInteractable currentInteractable;
+    private Interactable currentInteractable;
 
     private List<Vector3Int> currentPath; // The path the player is currently following
     private int pathIndex;                // Current index in the path
@@ -23,9 +23,12 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+#pragma warning disable CS0618 // Type or member is obsolete
         pathfinding = FindObjectOfType<Pathfinding>();
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
         tileManager = FindObjectOfType<TileInteractionManager>();
-
+#pragma warning restore CS0618 // Type or member is obsolete
         if (pathfinding == null) Debug.LogError("PlayerController: Pathfinding script not found!");
         if (tileManager == null) Debug.LogError("PlayerController: TileInteractionManager not found!");
     }
@@ -95,7 +98,7 @@ public class PlayerController : MonoBehaviour
         if (currentPath == null || pathIndex >= currentPath.Count)
         {
             // No path or path finished, stop movement
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             return;
         }
 
@@ -106,7 +109,7 @@ public class PlayerController : MonoBehaviour
         Vector2 direction = (targetWorldPos - transform.position).normalized;
 
         // Move the player
-        rb.velocity = direction * moveSpeed;
+        rb.linearVelocity = direction * moveSpeed;
 
         // Check if player has reached the current target cell
         if (Vector2.Distance(transform.position, targetWorldPos) < stoppingDistance)
@@ -115,7 +118,7 @@ public class PlayerController : MonoBehaviour
             if (pathIndex >= currentPath.Count)
             {
                 // Reached end of path
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
                 currentPath = null; // Clear path
             }
         }
@@ -124,7 +127,7 @@ public class PlayerController : MonoBehaviour
     // --- Interaction Trigger (Same as before) ---
     void OnTriggerEnter2D(Collider2D other)
     {
-        IInteractable interactable = other.GetComponent<IInteractable>();
+        Interactable interactable = other.GetComponent<Interactable>();
         if (interactable != null)
         {
             currentInteractable = interactable;
@@ -134,7 +137,7 @@ public class PlayerController : MonoBehaviour
 
     void OnTriggerExit2D(Collider2D other)
     {
-        IInteractable interactable = other.GetComponent<IInteractable>();
+        Interactable interactable = other.GetComponent<Interactable>();
         if (interactable != null && currentInteractable == interactable)
         {
             currentInteractable = null;

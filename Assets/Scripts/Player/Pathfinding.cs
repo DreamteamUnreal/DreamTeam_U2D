@@ -11,7 +11,9 @@ public class Pathfinding : MonoBehaviour
     {
         if (tileManager == null)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             tileManager = FindObjectOfType<TileInteractionManager>();
+#pragma warning restore CS0618 // Type or member is obsolete
             if (tileManager == null)
             {
                 Debug.LogError("Pathfinding: TileInteractionManager not found in scene!");
