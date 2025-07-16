@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TileMap", "TileMap", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
 		TileInteractionManager.cs = TileInteractionManager.cs
@@ -11,15 +13,35 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Player", "Player", "{2F94A7
 		PlayerController.cs = PlayerController.cs
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Interfaces", "Interfaces", "{F65A5EBF-2E84-409D-910B-1107D7A57854}"
+	ProjectSection(SolutionItems) = preProject
+		Interactable.cs = Interactable.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Items", "Items", "{F0D91FAA-79A2-4521-B426-7E5FB9183AAB}"
+	ProjectSection(SolutionItems) = preProject
+		CarftingManager.cs = CarftingManager.cs
+		CollectibleItems.cs = CollectibleItems.cs
+		InventoryManager.cs = InventoryManager.cs
+		ItemData.cs = ItemData.cs
+		Scarecrow.cs = Scarecrow.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Recipe", "Recipe", "{173AA282-F320-4A7B-929D-F820B92E0AFF}"
+	ProjectSection(SolutionItems) = preProject
+		RecipeData.cs = RecipeData.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Animals", "Animals", "{75FB0F08-49DC-4A5E-A5AE-A27E83C4C277}"
+	ProjectSection(SolutionItems) = preProject
+		AnimalAI.cs = AnimalAI.cs
+	EndProjectSection
+EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EA4F105D-FEEF-4BCF-BBF9-5626E5905E61}
 	EndGlobalSection
 EndGlobal
