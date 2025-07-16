@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class CollectibleItem : MonoBehaviour, IInteractable
+public class CollectibleItem : MonoBehaviour, Interactable
 {
     public ItemData itemData; // ScriptableObject for item details
     public int quantity = 1;

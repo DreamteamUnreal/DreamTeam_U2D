@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-public class Scarecrow : MonoBehaviour, IInteractable
+public class Scarecrow : MonoBehaviour, Interactable
 {
     public float scareRadius = 10f;
     public float scareDuration = 3f; // How long animals are scared
