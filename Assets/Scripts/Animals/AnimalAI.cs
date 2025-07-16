@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections; // For coroutines
 
 public class AnimalAI : MonoBehaviour
@@ -123,7 +122,9 @@ public class AnimalAI : MonoBehaviour
     private bool FindNearbyIngredient()
     {
         // For a real game, you'd want more efficient searching (e.g., Physics2D.OverlapCircleAll)
+#pragma warning disable CS0618 // Type or member is obsolete
         CollectibleItem[] allItems = FindObjectsOfType<CollectibleItem>();
+#pragma warning restore CS0618 // Type or member is obsolete
         float closestDistance = Mathf.Infinity;
         CollectibleItem potentialTarget = null;
 

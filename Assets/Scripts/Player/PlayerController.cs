@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBhaviour
+public class PlayerController : MonoBehaviour
 {
 	public float moveSpeed = 5f;
 	private Rigidbody2D rb;

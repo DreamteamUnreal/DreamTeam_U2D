@@ -1,8 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36310.24 d17.14
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{FA421688-05A5-E517-3BFC-4F29A799BB5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{8D2151C4-4278-8825-DB5E-9BE7EE03440D}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TileMap", "TileMap", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
 		TileInteractionManager.cs = TileInteractionManager.cs
@@ -38,10 +40,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Animals", "Animals", "{75FB
 	EndProjectSection
 EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA421688-05A5-E517-3BFC-4F29A799BB5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA421688-05A5-E517-3BFC-4F29A799BB5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA421688-05A5-E517-3BFC-4F29A799BB5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA421688-05A5-E517-3BFC-4F29A799BB5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D2151C4-4278-8825-DB5E-9BE7EE03440D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D2151C4-4278-8825-DB5E-9BE7EE03440D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D2151C4-4278-8825-DB5E-9BE7EE03440D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D2151C4-4278-8825-DB5E-9BE7EE03440D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {EA4F105D-FEEF-4BCF-BBF9-5626E5905E61}
 	EndGlobalSection
 EndGlobal
