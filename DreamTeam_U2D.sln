@@ -6,6 +6,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TileMap", "TileMap", "{02EA
 		TileInteractionManager.cs = TileInteractionManager.cs
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Player", "Player", "{2F94A773-C450-4A90-8432-BAA1B4F5FDA6}"
+	ProjectSection(SolutionItems) = preProject
+		PlayerController.cs = PlayerController.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
