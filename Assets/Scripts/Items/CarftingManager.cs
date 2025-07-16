@@ -42,6 +42,6 @@ public class CraftingManager : MonoBehaviour
         return true;
     }
 
-    // You would typically have a UI method to display recipes and trigger Craft
+    // We would typically have a UI method to display recipes and trigger Craft
     // public void OpenCraftingUI() { /* ... display recipes ... */ }
 }

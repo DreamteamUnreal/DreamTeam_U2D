@@ -5,11 +5,11 @@ using System.Collections.Generic; // Added for List
 
 public class TileInteractionManager : MonoBehaviour
 {
-    public Tilemap groundTilemap; // Assign your ground tilemap in the Inspector
+    public Tilemap groundTilemap; // Assign ground tilemap in the Inspector
     public Tilemap interactableTilemap; // For things like berry bushes, mushroom patches
     public Tilemap obstacleTilemap; // For unpassable objects like fences, trees
 
-    // You might define custom Tile assets for special features
+    // Might define custom Tile assets for special features
     public TileBase scarecrowTile;
     public TileBase bushSlowTile;
     public TileBase riverTile;
@@ -61,7 +61,7 @@ public class TileInteractionManager : MonoBehaviour
         {
             return false; // Cell has an obstacle
         }
-        // You might add checks for other non-passable tiles if they are on different layers
+        // Might add checks for other non-passable tiles if they are on different layers
         // For example, if a "deep water" tile is on groundTilemap and is impassable:
         // if (groundTilemap.GetTile(cellPosition) == deepWaterTile) return false;
 
