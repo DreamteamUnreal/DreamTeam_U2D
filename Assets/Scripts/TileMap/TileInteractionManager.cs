@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿// TileInteractionManager.cs
+using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Collections.Generic; // Added for List
 
 public class TileInteractionManager : MonoBehaviour
 {
@@ -27,6 +29,18 @@ public class TileInteractionManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Converts a cell position to a world position (center of the cell).
+    /// </summary>
+    public Vector3 CellToWorld(Vector3Int cellPosition)
+    {
+        if (groundTilemap != null)
+        {
+            return groundTilemap.GetCellCenterWorld(cellPosition);
+        }
+        return Vector3.zero;
+    }
+
+    /// <summary>
     /// Checks if a cell contains a specific type of tile.
     /// </summary>
     public bool IsTileOfType(Vector3Int cellPosition, Tilemap targetTilemap, TileBase targetTile)
@@ -47,10 +61,41 @@ public class TileInteractionManager : MonoBehaviour
         {
             return false; // Cell has an obstacle
         }
-        // Add checks for other non-passable tiles if they are on different layers
+        // You might add checks for other non-passable tiles if they are on different layers
+        // For example, if a "deep water" tile is on groundTilemap and is impassable:
+        // if (groundTilemap.GetTile(cellPosition) == deepWaterTile) return false;
+
+        // Also check if the cell is within the bounds of your main tilemap
+        if (groundTilemap != null && !groundTilemap.HasTile(cellPosition))
+        {
+            return false; // Not a valid ground tile
+        }
+
         return true;
     }
 
-    // You could add functions to query what type of "ingredient" is on an interactable tile
-    // public string GetIngredientTypeAtCell(Vector3Int cellPosition) { ... }
+    /// <summary>
+    /// Gets all valid neighboring cells for pathfinding.
+    /// </summary>
+    public List<Vector3Int> GetNeighborCells(Vector3Int cell)
+    {
+        List<Vector3Int> neighbors = new List<Vector3Int>();
+
+        // Check 8 directions (including diagonals for smoother movement, adjust if only cardinal is desired)
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                if (x == 0 && y == 0) continue; // Skip self
+
+                Vector3Int neighborCell = new Vector3Int(cell.x + x, cell.y + y, cell.z);
+
+                if (IsCellPassable(neighborCell))
+                {
+                    neighbors.Add(neighborCell);
+                }
+            }
+        }
+        return neighbors;
+    }
 }
