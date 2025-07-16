@@ -25,15 +25,9 @@ public class PlayerController : MonoBehaviour
 
 	public void OnInteract(InputAction.CallbackContext context)
 	{
-		if (context.performed)
+		if (context.performed && currentInteractable != null)
 		{
-			if (currentInteractable != null)
-			{
-				currentInteractable.Interact(this.gameObject);
-			}
-			else
-			{
-			}
+			currentInteractable.Interact(this.gameObject);
 		}
 	}
 
