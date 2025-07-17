@@ -19,7 +19,18 @@
                 {
                     "name": "",
                     "id": "c3f90f31-4dcb-4cc8-b3b2-8b543b44097a",
-                    "path": "",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fe3e4cae-3b9c-4126-9df9-95ae84520ac7",
+                    "path": "<Mouse>/press",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
