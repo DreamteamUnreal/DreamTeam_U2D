@@ -26,7 +26,7 @@ public class Pathfinding : MonoBehaviour
     /// </summary>
     /// <returns>A list of Vector3Int cells representing the path, or null if no path found.</returns>
     public List<Vector3Int> FindPath(Vector3Int startCell,
-									 Vector3Int targetCell)
+									Vector3Int targetCell)
 	{
 		if (tileManager != null)
 		{
