@@ -67,10 +67,12 @@ public class LevelGenerator : MonoBehaviour
         // 4. Optionally initialize other game elements
         SpawnPlayerAndAnimals();
 
-        // For A* pathfinding manager
-        // Ensure TileInteractionManager is aware of these newly created tilemaps
-        TileInteractionManager tileInteractionManager = FindObjectOfType<TileInteractionManager>();
-        if (tileInteractionManager != null)
+		// For A* pathfinding manager
+		// Ensure TileInteractionManager is aware of these newly created tilemaps
+#pragma warning disable CS0618 // Type or member is obsolete
+		TileInteractionManager tileInteractionManager = FindObjectOfType<TileInteractionManager>();
+#pragma warning restore CS0618 // Type or member is obsolete
+		if (tileInteractionManager != null)
         {
             tileInteractionManager.groundTilemap = groundTilemap;
             tileInteractionManager.obstacleTilemap = obstacleTilemap;
