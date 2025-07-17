@@ -17,4 +17,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/HappyHarvest/Scenes/House_Interior.unity
     guid: 5eae6d8f741dc624395c4cd2e57cab18
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: f8e01c09742597a49a05205f4abf3033, type: 3}
+  m_UseUCBPForAssetBundles: 0
