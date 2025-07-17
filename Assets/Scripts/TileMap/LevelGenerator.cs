@@ -116,7 +116,7 @@ public class LevelGenerator : MonoBehaviour
             renderer.sortingLayerName = "Obstacles"; // Make sure you have an "Obstacles" sorting layer
             renderer.sortingOrder = 1; // Render above ground
             // Add a TilemapCollider2D for obstacles (important for A* IsCellPassable if it checks colliders)
-            // You might manage this differently if IsCellPassable only checks HasTile on obstacleTilemap
+            // Might manage this differently if IsCellPassable only checks HasTile on obstacleTilemap
             // obstacleTilemap.gameObject.AddComponent<TilemapCollider2D>();
         }
 
