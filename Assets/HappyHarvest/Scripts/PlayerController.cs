@@ -356,14 +356,17 @@ namespace HappyHarvest
             m_CanControl = canControl;
             if (canControl)
             {
-                m_MoveAction.Enable();
+                m_ClickToMoveAction.Enable(); // Enable click-to-move
+                m_MoveAction.Enable(); // <--- REMOVE OR COMMENT OUT THIS LINE
                 m_NextItemAction.Enable();
                 m_PrevItemAction.Enable();
                 m_UseItemAction.Enable();
             }
             else
             {
-                m_MoveAction.Disable();
+                StopMovement(); // Stop player movement when control is toggled off
+                m_ClickToMoveAction.Disable(); // Disable click-to-move
+                                               // m_MoveAction.Disable(); // <--- REMOVE OR COMMENT OUT THIS LINE
                 m_NextItemAction.Disable();
                 m_PrevItemAction.Disable();
                 m_UseItemAction.Disable();
@@ -452,9 +455,7 @@ namespace HappyHarvest
                 itemVisual.Instance.SetActive(enable);
             }
         }
-
-
-
+        
         void CreateItemVisual(Item item)
         {
             if (item.VisualPrefab != null && !m_ItemVisualInstance.ContainsKey(item))
@@ -470,6 +471,7 @@ namespace HappyHarvest
                 };
             }
         }
+
         // --- NEW: FollowPath Method ---
         private void FollowPath()
         {
@@ -523,11 +525,30 @@ namespace HappyHarvest
         private void StopMovement()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-			m_Rigidbody.velocity = Vector2.zero; // Stop any remaining Rigidbody velocity
+            m_Rigidbody.velocity = Vector2.zero; // Stop any remaining Rigidbody velocity
 #pragma warning restore CS0618 // Type or member is obsolete
-			m_CurrentPath = null; // Clear the path
+            m_CurrentPath = null; // Clear the path
             m_PathIndex = 0;      // Reset path index
             m_Animator.SetFloat(m_SpeedHash, 0); // Set animation speed to 0 (idle)
+        }
+
+        // Helper for debugging: Draw the path in the editor
+        void OnDrawGizmos()
+        {
+            if (m_CurrentPath != null && m_TileManager != null)
+            {
+                Gizmos.color = Color.blue; // Path will be drawn in blue
+                for (int i = 0; i < m_CurrentPath.Count; i++)
+                {
+                    // Draw a sphere at each node in the path
+                    Gizmos.DrawSphere(m_TileManager.CellToWorld(m_CurrentPath[i]), 0.2f);
+                    if (i < m_CurrentPath.Count - 1)
+                    {
+                        // Draw a line connecting consecutive nodes
+                        Gizmos.DrawLine(m_TileManager.CellToWorld(m_CurrentPath[i]), m_TileManager.CellToWorld(m_CurrentPath[i + 1]));
+                    }
+                }
+            }
         }
     }
 
@@ -542,7 +563,7 @@ namespace HappyHarvest
     public struct PlayerSaveData
     {
         public Vector3 Position;
-        
+
         public int Coins;
         public List<InventorySaveData> Inventory;
     }
