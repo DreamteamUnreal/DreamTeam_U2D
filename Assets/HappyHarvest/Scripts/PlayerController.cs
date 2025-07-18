@@ -226,16 +226,7 @@ namespace HappyHarvest
                 }
             }
 
-            if (Keyboard.current.f5Key.wasPressedThisFrame)
-            {
-                SaveSystem.Save();
-            }
-            else if (Keyboard.current.f9Key.wasPressedThisFrame)
-            {
-                SaveSystem.Load();
-            }
-
-            // Add this null check before accessing Keyboard.current
+            // Add this null check
             if (UnityEngine.InputSystem.Keyboard.current != null)
             {
                 if (UnityEngine.InputSystem.Keyboard.current.f5Key.wasPressedThisFrame)
@@ -246,6 +237,15 @@ namespace HappyHarvest
                 {
                     SaveSystem.Load();
                 }
+            }
+            
+            if (Keyboard.current.f5Key.wasPressedThisFrame)
+            {
+                SaveSystem.Save();
+            }
+            else if (Keyboard.current.f9Key.wasPressedThisFrame)
+            {
+                SaveSystem.Load();
             }
         }
 
