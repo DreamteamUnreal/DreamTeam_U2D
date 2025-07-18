@@ -963,7 +963,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 628c638196f86864cbeb37c1d6fa70eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 4
   stoppingDistance: 0.1
   inventoryManager: {fileID: 1475697814}
   craftingManager: {fileID: 1475697813}
