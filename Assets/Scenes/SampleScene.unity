@@ -676,6 +676,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1057169705}
   - component: {fileID: 1057169704}
+  - component: {fileID: 1057169707}
+  - component: {fileID: 1057169706}
   m_Layer: 0
   m_Name: PathfindingSystem
   m_TagString: Untagged
@@ -711,6 +713,56 @@ Transform:
   m_Children: []
   m_Father: {fileID: 314945489}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1057169706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1057169703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec2dcbd8a89e04e45a95be60fa7b4274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1839735485 &1057169707
+Tilemap:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1057169703}
+  m_Enabled: 1
+  m_Tiles: {}
+  m_AnimatedTiles: {}
+  m_TileAssetArray: []
+  m_TileSpriteArray: []
+  m_TileMatrixArray: []
+  m_TileColorArray: []
+  m_TileObjectToInstantiateArray: []
+  m_AnimationFrameRate: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Origin: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0, y: 0, z: 1}
+  m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
+  m_TileOrientation: 0
+  m_TileOrientationMatrix:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
 --- !u!1 &1475697808
 GameObject:
   m_ObjectHideFlags: 0
@@ -977,6 +1029,7 @@ MonoBehaviour:
   Speed: 5
   Target: {fileID: 1475697809}
   ItemAttachBone: {fileID: 115194822}
+  StoppingDistance: 0.1
   m_Coins: 10
   m_Inventory:
     Entries:
@@ -1010,7 +1063,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfe933ce79197164ca0519e3772495b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SpawnIndex: 1
+  SpawnIndex: 0
 --- !u!1 &1483418110
 GameObject:
   m_ObjectHideFlags: 0
@@ -5646,6 +5699,8 @@ GameObject:
   - component: {fileID: 1929203093}
   - component: {fileID: 1929203094}
   - component: {fileID: 1929203095}
+  - component: {fileID: 1929203097}
+  - component: {fileID: 1929203096}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -5737,6 +5792,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e3e91b5ccd474242a289d4558c32c4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1929203096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1929203090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec2dcbd8a89e04e45a95be60fa7b4274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1839735485 &1929203097
+Tilemap:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1929203090}
+  m_Enabled: 1
+  m_Tiles: {}
+  m_AnimatedTiles: {}
+  m_TileAssetArray: []
+  m_TileSpriteArray: []
+  m_TileMatrixArray: []
+  m_TileColorArray: []
+  m_TileObjectToInstantiateArray: []
+  m_AnimationFrameRate: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Origin: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0, y: 0, z: 1}
+  m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
+  m_TileOrientation: 0
+  m_TileOrientationMatrix:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
