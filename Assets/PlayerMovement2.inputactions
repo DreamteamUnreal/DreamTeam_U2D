@@ -1,0 +1,67 @@
+{
+    "name": "PlayerMovement2",
+    "maps": [
+        {
+            "name": "Movement",
+            "id": "1270e818-6fe7-46c7-9d11-18968526cec2",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "d0cdca86-c242-4d06-99fd-e55a476b400e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "09070406-0ac1-49e5-acfa-77307e9d1479",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b15b0c7b-50c4-49b6-85f2-1cc232b4bbca",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0cc3f37e-4f75-41c2-ac16-30f7f6af34a8",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4d9e86f3-e7fa-426f-aec8-60f0cc2bd4b5",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
