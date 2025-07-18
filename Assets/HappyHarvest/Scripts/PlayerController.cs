@@ -1,3 +1,4 @@
+// HappyHarvet/PlayerController.cs
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,7 +24,14 @@ namespace HappyHarvest
                 UIHandler.UpdateCoins(Coins);
             }
         }
-
+        
+        // Pathfinding and Tilemap references
+        private Pathfinding m_Pathfinding;
+        private TileInteractionManager m_TileManager;
+        private List<Vector3Int> m_CurrentPath; // The path the player is currently following
+        private int m_PathIndex;                // Current index in the path
+        public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
+        private InputAction m_ClickToMoveAction; // New Action for click-to-move input
         public InventorySystem Inventory => m_Inventory;
         public Animator Animator => m_Animator;
 
@@ -74,18 +82,29 @@ namespace HappyHarvest
                 Destroy(gameObject);
                 return;
             }
-            
+
             m_Rigidbody = GetComponent<Rigidbody2D>();
             m_Animator = GetComponentInChildren<Animator>();
             m_TargetMarker = Target.GetComponent<TargetMarker>();
             m_TargetMarker.Hide();
-            
+
             //we can only set DontDestroyOnLoad root object, so ensure its root (Level Designer sometime place the character
             //prefab already in the scene and can sometime tuck it under other object in the hierarchy)
             gameObject.transform.SetParent(null);
-            
+
             GameManager.Instance.Player = this;
             DontDestroyOnLoad(gameObject);
+
+			// Get references to Pathfinding and TileInteractionManager
+#pragma warning disable CS0618 // Type or member is obsolete
+			m_Pathfinding = FindObjectOfType<Pathfinding>();
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
+			m_TileManager = FindObjectOfType<TileInteractionManager>();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+			if (m_Pathfinding == null) Debug.LogError("PlayerController: Pathfinding script not found in scene!");
+            if (m_TileManager == null) Debug.LogError("PlayerController: TileInteractionManager not found in scene!");
         }
         
         void Start()
