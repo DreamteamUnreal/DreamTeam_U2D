@@ -996,7 +996,7 @@ MonoBehaviour:
     m_ActionId: 2c69b5f5-6011-45a3-b615-9f2d86a408ca
     m_ActionName: ClickToMove/KeybordPrss
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
+  m_DefaultControlScheme: Mouse&Keybord
   m_DefaultActionMap: ClickToMove
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 519420031}
