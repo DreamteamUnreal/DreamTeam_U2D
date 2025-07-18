@@ -164,7 +164,6 @@ namespace HappyHarvest
                 UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
                 return;
             }
-          
             
             //If we reached here, we are not above UI or an interactive object, so set the cursor to the normal one
             UIHandler.ChangeCursor(UIHandler.CursorType.Normal);
