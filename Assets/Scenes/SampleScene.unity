@@ -119,6 +119,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &115194822 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5576993660626036762, guid: 8e445f3f83a87224fa3a25f2e2be324d, type: 3}
+  m_PrefabInstance: {fileID: 1540368164}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &314945487
 GameObject:
   m_ObjectHideFlags: 0
@@ -971,7 +976,7 @@ MonoBehaviour:
   InputAction: {fileID: -944628639613478452, guid: f8e01c09742597a49a05205f4abf3033, type: 3}
   Speed: 4
   Target: {fileID: 1475697809}
-  ItemAttachBone: {fileID: 0}
+  ItemAttachBone: {fileID: 115194822}
   m_Coins: 10
   m_Inventory:
     Entries:
