@@ -728,8 +728,8 @@ GameObject:
   - component: {fileID: 1475697813}
   - component: {fileID: 1475697817}
   - component: {fileID: 1475697818}
-  - component: {fileID: 1475697820}
   - component: {fileID: 1475697819}
+  - component: {fileID: 1475697820}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -974,7 +974,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   InputAction: {fileID: -944628639613478452, guid: f8e01c09742597a49a05205f4abf3033, type: 3}
-  Speed: 4
+  Speed: 5
   Target: {fileID: 1475697809}
   ItemAttachBone: {fileID: 115194822}
   m_Coins: 10
@@ -1010,7 +1010,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfe933ce79197164ca0519e3772495b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SpawnIndex: 0
+  SpawnIndex: 1
 --- !u!1 &1483418110
 GameObject:
   m_ObjectHideFlags: 0
