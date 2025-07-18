@@ -1,7 +1,6 @@
 // LevelGenerator.cs
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System.Collections.Generic;
 
 public class LevelGenerator : MonoBehaviour
 {
@@ -67,12 +66,12 @@ public class LevelGenerator : MonoBehaviour
         // 4. Optionally initialize other game elements
         SpawnPlayerAndAnimals();
 
-		// For A* pathfinding manager
-		// Ensure TileInteractionManager is aware of these newly created tilemaps
+        // For A* pathfinding manager
+        // Ensure TileInteractionManager is aware of these newly created tilemaps
 #pragma warning disable CS0618 // Type or member is obsolete
-		TileInteractionManager tileInteractionManager = FindObjectOfType<TileInteractionManager>();
+        TileInteractionManager tileInteractionManager = FindObjectOfType<TileInteractionManager>();
 #pragma warning restore CS0618 // Type or member is obsolete
-		if (tileInteractionManager != null)
+        if (tileInteractionManager != null)
         {
             tileInteractionManager.groundTilemap = groundTilemap;
             tileInteractionManager.obstacleTilemap = obstacleTilemap;
@@ -181,7 +180,7 @@ public class LevelGenerator : MonoBehaviour
         for (int y = 0; y < levelHeight; y++)
         {
             // Reverse y for array indexing vs. Unity's bottom-left origin for tilemaps
-            string row = levelLayout[levelHeight - 1 - y]; 
+            string row = levelLayout[levelHeight - 1 - y];
             for (int x = 0; x < levelWidth; x++)
             {
                 Vector3Int cellPosition = new Vector3Int(x, y, 0);
@@ -208,7 +207,7 @@ public class LevelGenerator : MonoBehaviour
                         // Set ground tile under player start
                         groundTilemap.SetTile(cellPosition, grassTile);
                         break;
-                    // Add more cases for other tile types (e.g., A for Apple if it's a tile)
+                        // Add more cases for other tile types (e.g., A for Apple if it's a tile)
                 }
             }
         }
@@ -237,7 +236,7 @@ public class LevelGenerator : MonoBehaviour
                 {
                     Instantiate(squirrelPrefab, worldPos, Quaternion.identity);
                 }
-                 // Example: Spawn an apple if it's a separate GameObject
+                // Example: Spawn an apple if it's a separate GameObject
                 else if (tileChar == 'A' && applePrefab != null && Random.value < 0.5f) // 50% chance on 'A'
                 {
                     Instantiate(applePrefab, worldPos, Quaternion.identity);
