@@ -234,6 +234,19 @@ namespace HappyHarvest
             {
                 SaveSystem.Load();
             }
+
+            // Add this null check before accessing Keyboard.current
+            if (UnityEngine.InputSystem.Keyboard.current != null)
+            {
+                if (UnityEngine.InputSystem.Keyboard.current.f5Key.wasPressedThisFrame)
+                {
+                    SaveSystem.Save();
+                }
+                else if (UnityEngine.InputSystem.Keyboard.current.f9Key.wasPressedThisFrame)
+                {
+                    SaveSystem.Load();
+                }
+            }
         }
 
         void UseObject()
