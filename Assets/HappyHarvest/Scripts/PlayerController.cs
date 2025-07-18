@@ -226,26 +226,22 @@ namespace HappyHarvest
                 }
             }
 
-            // Add this null check
-            if (UnityEngine.InputSystem.Keyboard.current != null)
+            // NULL CHECK:
+            if (Keyboard.current != null)
             {
-                if (UnityEngine.InputSystem.Keyboard.current.f5Key.wasPressedThisFrame)
+                if (Keyboard.current.f5Key.wasPressedThisFrame)
                 {
                     SaveSystem.Save();
                 }
-                else if (UnityEngine.InputSystem.Keyboard.current.f9Key.wasPressedThisFrame)
+                else if (Keyboard.current.f9Key.wasPressedThisFrame)
                 {
                     SaveSystem.Load();
                 }
             }
-            
-            if (Keyboard.current.f5Key.wasPressedThisFrame)
+            else
             {
-                SaveSystem.Save();
-            }
-            else if (Keyboard.current.f9Key.wasPressedThisFrame)
-            {
-                SaveSystem.Load();
+                // Optional: Log a warning if the keyboard isn't ready, useful for debugging
+                Debug.LogWarning("Keyboard.current is null. Input system might not be initialized yet.");
             }
         }
 
