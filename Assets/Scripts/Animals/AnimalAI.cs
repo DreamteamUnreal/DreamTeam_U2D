@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿//AninalAI.cs
+using UnityEngine;
 using System.Collections; // For coroutines
 
 public class AnimalAI : MonoBehaviour
@@ -22,7 +23,7 @@ public class AnimalAI : MonoBehaviour
     void Start()
     {
         startPosition = transform.position;
-        playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform; // Ensure your player has the "Player" tag
+        playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform; // Ensure player has the "Player" tag
         StartCoroutine(Roam());
     }
 
