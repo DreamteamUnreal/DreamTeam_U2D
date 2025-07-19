@@ -5698,7 +5698,7 @@ GameObject:
   - component: {fileID: 1585421679}
   - component: {fileID: 1585421678}
   m_Layer: 0
-  m_Name: Cat1
+  m_Name: Squirrel1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5781,7 +5781,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 1193388614, guid: db733f50b3f2f334092e5efcc17b4916, type: 3}
+  m_Sprite: {fileID: 7579966246130621718, guid: 59e1403b850c34148ba24c864f5bbd26, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
