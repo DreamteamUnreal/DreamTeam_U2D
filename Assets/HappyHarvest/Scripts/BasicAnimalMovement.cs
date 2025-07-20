@@ -1,4 +1,4 @@
-//HappyHarvest/BasicAnimalMovement.cs
+// HappyHarvest/BasicAnimalMovement.cs
 using Template2DCommon;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -52,8 +52,16 @@ namespace HappyHarvest
             m_SoundTimer -= Time.deltaTime;
             if (m_SoundTimer <= 0.0f)
             {
-                SoundManager.Instance.PlaySFXAt(transform.position, AnimalSound[Random.Range(0, AnimalSound.Length)],
-                    true);
+                // ADD THIS NULL CHECK:
+                if (SoundManager.Instance != null && AnimalSound != null && AnimalSound.Length > 0)
+                {
+                    SoundManager.Instance.PlaySFXAt(transform.position, AnimalSound[Random.Range(0, AnimalSound.Length)], true);
+                }
+                else
+                {
+                    // Optional: Log a warning if SoundManager isn't ready or sounds are missing
+                    // Debug.LogWarning("SoundManager.Instance is null or AnimalSound array is empty/null. Cannot play animal sound.");
+                }
                 m_SoundTimer = Random.Range(MinRandomSoundTime, MaxRandomSoundTime);
             }
 
@@ -95,6 +103,15 @@ namespace HappyHarvest
 
             var pos = (Vector2)transform.position;
             var pts = pos + (Vector2)dir;
+
+            // ADD THIS NULL CHECK:
+            if (Area == null)
+            {
+                Debug.LogError("BasicAnimalMovement: 'Area' Collider2D is not assigned in the Inspector! Cannot pick new target.");
+                // Fallback to idle if Area is null, or just return to prevent further errors
+                PickNewIdleTime();
+                return;
+            }
 
             if (!Area.OverlapPoint(pts))
             {
