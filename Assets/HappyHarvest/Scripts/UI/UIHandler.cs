@@ -68,6 +68,22 @@ namespace HappyHarvest
 
             m_Document = GetComponent<UIDocument>();
 
+            // Recommended: Null check m_Document here as well, if it might not be present
+            if (m_Document == null)
+            {
+                Debug.LogError("UIHandler: UIDocument component not found on this GameObject. UI will not function.");
+                enabled = false; // Disable this component to prevent further errors
+                return;
+            }
+
+            // Recommended: Null check rootVisualElement, similar to MainMenuHandler
+            if (m_Document.rootVisualElement == null)
+            {
+                Debug.LogError("UIHandler: UIDocument's rootVisualElement is null. Is the UXML asset assigned?");
+                enabled = false;
+                return;
+            }
+
             m_InventorySlots = m_Document.rootVisualElement.Query<VisualElement>("InventoryEntry").ToList();
             m_ItemCountLabels = m_Document.rootVisualElement.Query<Label>("ItemCount").ToList();
 
@@ -76,7 +92,15 @@ namespace HappyHarvest
                 var i1 = i;
                 m_InventorySlots[i].AddManipulator(new Clickable(() =>
                 {
-                    GameManager.Instance.Player.ChangeEquipItem(i1);
+                    // Add null check for GameManager.Instance here too, as it's accessed within Awake
+                    if (GameManager.Instance != null && GameManager.Instance.Player != null)
+                    {
+                        GameManager.Instance.Player.ChangeEquipItem(i1);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("UIHandler: GameManager or Player is null when attempting to change equip item.");
+                    }
                 }));
             }
 
@@ -86,48 +110,99 @@ namespace HappyHarvest
             m_CointCounter = m_Document.rootVisualElement.Q<Label>("CoinAmount");
 
             m_MarketPopup = m_Document.rootVisualElement.Q<VisualElement>("MarketPopup");
-            m_MarketPopup.Q<Button>("CloseButton").clicked += CloseMarket;
-            m_MarketPopup.visible = false;
+            // Add null check for m_MarketPopup before accessing its children
+            if (m_MarketPopup != null)
+            {
+                var closeButton = m_MarketPopup.Q<Button>("CloseButton");
+                if (closeButton != null)
+                {
+                    closeButton.clicked += CloseMarket;
+                }
+                else
+                {
+                    Debug.LogWarning("UIHandler: 'CloseButton' not found in 'MarketPopup'.");
+                }
+                m_MarketPopup.visible = false;
 
-            m_BuyButton = m_MarketPopup.Q<Button>("BuyButton");
-            m_BuyButton.clicked += ToggleToBuy;
-            m_SellButton = m_MarketPopup.Q<Button>("SellButton");
-            m_SellButton.clicked += ToggleToSell;
+                m_BuyButton = m_MarketPopup.Q<Button>("BuyButton");
+                if (m_BuyButton != null) m_BuyButton.clicked += ToggleToBuy; else Debug.LogWarning("UIHandler: 'BuyButton' not found in 'MarketPopup'.");
 
-            m_MarketContentScrollview = m_MarketPopup.Q<ScrollView>("ContentScrollView");
+                m_SellButton = m_MarketPopup.Q<Button>("SellButton");
+                if (m_SellButton != null) m_SellButton.clicked += ToggleToSell; else Debug.LogWarning("UIHandler: 'SellButton' not found in 'MarketPopup'.");
+
+                m_MarketContentScrollview = m_MarketPopup.Q<ScrollView>("ContentScrollView");
+                if (m_MarketContentScrollview == null) Debug.LogWarning("UIHandler: 'ContentScrollView' not found in 'MarketPopup'.");
+            }
+            else
+            {
+                Debug.LogWarning("UIHandler: 'MarketPopup' not found in UXML.");
+            }
+
 
             m_TimerLabel = m_Document.rootVisualElement.Q<Label>("Timer");
+            if (m_TimerLabel == null) Debug.LogWarning("UIHandler: 'Timer' label not found in UXML.");
+
 
             m_SettingMenu = new SettingMenu(m_Document.rootVisualElement);
-            m_SettingMenu.OnOpen += () => { GameManager.Instance.Pause(); };
-            m_SettingMenu.OnClose += () => { GameManager.Instance.Resume(); };
+            m_SettingMenu.OnOpen += () => { if (GameManager.Instance != null) GameManager.Instance.Pause(); };
+            m_SettingMenu.OnClose += () => { if (GameManager.Instance != null) GameManager.Instance.Resume(); };
 
-            m_WarehouseUI = new WarehouseUI(m_Document.rootVisualElement.Q<VisualElement>("WarehousePopup"), MarketEntryTemplate);
+            // Add null check for WarehousePopup if it's optional
+            var warehousePopup = m_Document.rootVisualElement.Q<VisualElement>("WarehousePopup");
+            if (warehousePopup != null)
+            {
+                m_WarehouseUI = new WarehouseUI(warehousePopup, MarketEntryTemplate);
+            }
+            else
+            {
+                Debug.LogWarning("UIHandler: 'WarehousePopup' not found in UXML. Warehouse UI might not function.");
+            }
+
 
             m_Blocker = m_Document.rootVisualElement.Q<VisualElement>("Blocker");
-            
-            m_Blocker.style.opacity = 1.0f;
-            m_Blocker.schedule.Execute(() => { FadeFromBlack(() => { }); }).ExecuteLater(500);
-
-            m_Blocker.RegisterCallback<TransitionEndEvent>(evt =>
+            if (m_Blocker != null)
             {
-                m_FadeFinishClbk?.Invoke();
-            });
+                m_Blocker.style.opacity = 1.0f;
+                // It's generally safer to put Schedule calls in Start or on an enabled event
+                // This is being executed later, so it's probably okay, but ensure m_Blocker is not null
+                m_Blocker.schedule.Execute(() => { FadeFromBlack(() => { }); }).ExecuteLater(500);
+
+                m_Blocker.RegisterCallback<TransitionEndEvent>(evt =>
+                {
+                    m_FadeFinishClbk?.Invoke();
+                });
+            }
+            else
+            {
+                Debug.LogWarning("UIHandler: 'Blocker' VisualElement not found in UXML.");
+            }
+
 
             m_SunLabel = m_Document.rootVisualElement.Q<Label>("SunLabel");
             m_RainLabel = m_Document.rootVisualElement.Q<Label>("RainLabel");
             m_ThunderLabel = m_Document.rootVisualElement.Q<Label>("ThunderLabel");
-            
-            m_SunLabel.AddManipulator(new Clickable(() => { GameManager.Instance.WeatherSystem?.ChangeWeather(WeatherSystem.WeatherType.Sun); }));
-            m_RainLabel.AddManipulator(new Clickable(() => { GameManager.Instance.WeatherSystem?.ChangeWeather(WeatherSystem.WeatherType.Rain); }));
-            m_ThunderLabel.AddManipulator(new Clickable(() => { GameManager.Instance.WeatherSystem?.ChangeWeather(WeatherSystem.WeatherType.Thunder); }));
+
+            // Add null checks for weather labels before adding manipulators
+            if (m_SunLabel != null) m_SunLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Sun); })); else Debug.LogWarning("UIHandler: 'SunLabel' not found.");
+            if (m_RainLabel != null) m_RainLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Rain); })); else Debug.LogWarning("UIHandler: 'RainLabel' not found.");
+            if (m_ThunderLabel != null) m_ThunderLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Thunder); })); else Debug.LogWarning("UIHandler: 'ThunderLabel' not found.");
         }
-        
-        
+
+
         void Update()
         {
-            m_TimerLabel.text = GameManager.Instance.CurrentTimeAsString();
+            // The critical line: add null check for GameManager.Instance here
+            if (GameManager.Instance != null && m_TimerLabel != null)
+            {
+                m_TimerLabel.text = GameManager.Instance.CurrentTimeAsString();
+            }
+            else
+            {
+                // This warning will tell if GameManager is not ready or if m_TimerLabel was not found
+                // Debug.LogWarning("UIHandler Update: GameManager.Instance or m_TimerLabel is null. Cannot update timer.");
+            }
         }
+
 
         private void OnApplicationFocus(bool hasFocus)
         {
