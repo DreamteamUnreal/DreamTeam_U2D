@@ -44,14 +44,114 @@ namespace HappyHarvest
 
         private void Awake()
         {
-            // Ensure GameManager.Instance is not null here too, or adjust execution order
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.DayCycleHandler = this;
             }
             else
             {
-                Debug.LogError("DayCycleHandler: GameManager.Instance is null in Awake! Check Script Execution Order.");
+                Debug.LogError("DayCycleHandler: GameManager.Instance is null in Awake! Check Script Execution Order. This DayCycleHandler will not be registered.");
+            }
+        }
+
+        // ... (Tick, UpdateLight, UpdateShadow methods) ...
+
+        // --- FIXED REGISTER/UNREGISTER METHODS ---
+
+        public static void RegisterShadow(ShadowInstance shadow)
+        {
+            // This part runs ONLY IN EDITOR, when Application.isPlaying is false
+            // (e.g., for previewing in the scene view without running the game)
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                var instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
+                if (instance != null)
+                {
+                    instance.m_Shadows.Add(shadow);
+                }
+                return; // Return early for editor-only case
+            }
+#endif
+            // This part runs at RUNTIME (both in Editor and in Builds)
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_Shadows.Add(shadow);
+            }
+            else
+            {
+                // This might happen if GameManager/DayCycleHandler isn't set up yet,
+                // which suggests a script execution order issue for runtime.
+                Debug.LogWarning("DayCycleHandler.RegisterShadow: GameManager.Instance or DayCycleHandler is null. Shadow not registered at runtime.");
+            }
+        }
+
+        public static void UnregisterShadow(ShadowInstance shadow)
+        {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                var instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
+                if (instance != null)
+                {
+                    instance.m_Shadows.Remove(shadow);
+                }
+                return;
+            }
+#endif
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_Shadows.Remove(shadow);
+            }
+            else
+            {
+                Debug.LogWarning("DayCycleHandler.UnregisterShadow: GameManager.Instance or DayCycleHandler is null. Shadow not unregistered at runtime.");
+            }
+        }
+
+        public static void RegisterLightBlender(LightInterpolator interpolator)
+        {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                var instance = FindFirstObjectByType<DayCycleHandler>();
+                if (instance != null)
+                {
+                    instance.m_LightBlenders.Add(interpolator);
+                }
+                return;
+            }
+#endif
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_LightBlenders.Add(interpolator);
+            }
+            else
+            {
+                Debug.LogWarning("DayCycleHandler.RegisterLightBlender: GameManager.Instance or DayCycleHandler is null. LightInterpolator not registered at runtime.");
+            }
+        }
+
+        public static void UnregisterLightBlender(LightInterpolator interpolator)
+        {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                var instance = FindFirstObjectByType<DayCycleHandler>();
+                if (instance != null)
+                {
+                    instance.m_LightBlenders.Remove(interpolator);
+                }
+                return;
+            }
+#endif
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_LightBlenders.Remove(interpolator);
+            }
+            else
+            {
+                Debug.LogWarning("DayCycleHandler.UnregisterLightBlender: GameManager.Instance or DayCycleHandler is null. LightInterpolator not unregistered at runtime.");
             }
         }
 
