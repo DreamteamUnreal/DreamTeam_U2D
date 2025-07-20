@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UIElements;
+using System;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -274,6 +276,16 @@ namespace HappyHarvest
                     handler.SetRatio(ratio);
                 }
             }
+        }
+
+        internal void Load(DayCycleHandlerSaveData timeSaveData)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object Save(ref DayCycleHandlerSaveData timeSaveData)
+        {
+            throw new NotImplementedException();
         }
 
         // ... rest of your code ...
