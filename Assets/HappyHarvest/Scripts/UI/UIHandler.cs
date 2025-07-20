@@ -226,8 +226,8 @@ namespace HappyHarvest
 
         public static void OpenMarket()
         {
-           s_Instance.OpenMarket_Internal();
-           GameManager.Instance.Pause();
+            s_Instance.OpenMarket_Internal();
+            GameManager.Instance.Pause();
         }
 
         public static void CloseMarket()
