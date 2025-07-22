@@ -1,7 +1,7 @@
-﻿using System;
+﻿//IInteractable.cs
 using UnityEngine;
 
-public interface Interactable
+public interface IInteractable
 {
 	void Interact(GameObject interactor);
 }

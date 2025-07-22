@@ -1,3 +1,4 @@
+//Product.cs
 using UnityEngine;
 
 namespace HappyHarvest
@@ -6,8 +7,9 @@ namespace HappyHarvest
     public class Product : Item
     {
         public int SellPrice = 1;
-        
-        public override bool CanUse(Vector3Int target)
+		internal object transform;
+
+		public override bool CanUse(Vector3Int target)
         {
             return true;
         }

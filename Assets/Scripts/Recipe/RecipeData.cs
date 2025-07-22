@@ -1,5 +1,6 @@
-﻿using System;
+﻿//RecipeData.cs
 using System.Collections.Generic;
+using HappyHarvest;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewRecipe", menuName = "Scriptable Objects/Recipe Data")]
@@ -10,14 +11,14 @@ public class RecipeData : ScriptableObject
     [System.Serializable]
     public struct Ingredient
     {
-        public ItemData item;
+        public Item item;
         public int quantity;
     }
 
     [System.Serializable]
     public struct Product
     {
-        public ItemData item;
+        public Item item;
         public int quantity;
     }
 

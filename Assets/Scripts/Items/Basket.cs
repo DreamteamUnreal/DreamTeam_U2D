@@ -26,7 +26,6 @@ namespace HappyHarvest
                 {
                     GameManager.Instance.Player.AddItem(product.Produce);
                 }
-               
                 return true;
             }
 
