@@ -1,4 +1,4 @@
-//HappyHarvest/MainMenuHandler.cs
+//MainMenuHandler.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;

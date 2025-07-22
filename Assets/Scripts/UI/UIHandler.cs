@@ -1,4 +1,4 @@
-//HappyHarvet/UIHandler.cs
+//UIHandler.cs
 using System.Collections.Generic;
 using Template2DCommon;
 using UnityEngine;

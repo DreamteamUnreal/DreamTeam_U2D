@@ -1,4 +1,4 @@
-// HappyHarvest/BasicAnimalMovement.cs
+// BasicAnimalMovement.cs
 using Template2DCommon;
 using UnityEngine;
 using Random = UnityEngine.Random;

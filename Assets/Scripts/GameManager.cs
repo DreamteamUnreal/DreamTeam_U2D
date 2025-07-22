@@ -1,4 +1,4 @@
-//HappyHarvest/GameManager.cs
+//GameManager.cs
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;

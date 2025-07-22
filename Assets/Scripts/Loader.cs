@@ -1,4 +1,4 @@
-//HappyHarvest/Loader.cs
+//Loader.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

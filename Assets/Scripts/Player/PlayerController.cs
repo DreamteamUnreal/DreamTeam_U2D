@@ -1,172 +1,579 @@
-﻿// PlayerController.cs
+// PlayerController.cs
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using System.Collections.Generic; // Added for List
 
-public class PlayerController : MonoBehaviour
+namespace HappyHarvest
 {
-    public float moveSpeed = 5f;
-    public float stoppingDistance = 0.1f; // How close player needs to be to a target cell center
-
-    private Rigidbody2D rb;
-    private Pathfinding pathfinding; // Reference to the Pathfinding script
-    private TileInteractionManager tileManager; // Reference to the TileInteractionManager
-
-    public InventoryManager inventoryManager; // Assign in Inspector
-    public CraftingManager craftingManager;   // Assign in Inspector
-
-    private Interactable currentInteractable;
-
-    private List<Vector3Int> currentPath; // The path the player is currently following
-    private int pathIndex;                // Current index in the path
-
-    void Awake()
+    public class PlayerController : MonoBehaviour
     {
-        rb = GetComponent<Rigidbody2D>();
-#pragma warning disable CS0618 // Type or member is obsolete
-		Pathfinding pathfinding1 = FindObjectOfType<Pathfinding>();
-#pragma warning restore CS0618 // Type or member is obsolete
-		pathfinding = pathfinding1;
-#pragma warning disable CS0618 // Type or member is obsolete
-		tileManager = FindObjectOfType<TileInteractionManager>();
-#pragma warning restore CS0618 // Type or member is obsolete
+        public InputActionAsset InputAction;
+        public float Speed = 4.0f;
 
-		if (pathfinding == null) Debug.LogError("PlayerController: Pathfinding script not found!");
-        if (tileManager == null) Debug.LogError("PlayerController: TileInteractionManager not found!");
-    }
+        public SpriteRenderer Target;
+        public Transform ItemAttachBone;
 
-    void FixedUpdate()
-    {
-        FollowPath();
-    }
-
-    // --- Input System Callbacks ---
-    // Remove OnMove since we're using click-to-move
-    // public void OnMove(InputAction.CallbackContext context) { ... }
-
-    public void OnInteract(InputAction.CallbackContext context)
-    {
-        if (context.performed)
+        public int Coins
         {
-            if (currentInteractable != null)
+            get => m_Coins;
+            set
             {
-                currentInteractable.Interact(this.gameObject);
+                m_Coins = value;
+                UIHandler.UpdateCoins(Coins);
+            }
+        }
+
+        // Pathfinding and Tilemap references
+        private Pathfinding m_Pathfinding;
+        private TileInteractionManager m_TileManager;
+        private List<Vector3Int> m_CurrentPath; // The path the player is currently following
+        private int m_PathIndex;                // Current index in the path
+        public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
+        private InputAction m_ClickToMoveAction; // New Action for click-to-move input
+        public InventorySystem Inventory => m_Inventory;
+        public Animator Animator => m_Animator;
+
+        //This is private as we don't want to be able to set coins without going through the accessor above that ensure
+        //the UI is updated, but is tagged as SerializedField so it appear in the editor so designer can set the starting
+        //amount of coins
+        [SerializeField]
+        private int m_Coins = 10;
+
+        [SerializeField]
+        private InventorySystem m_Inventory;
+
+        private Rigidbody2D m_Rigidbody;
+
+        private Vector3 m_SpawnPosition;
+
+        private InputAction m_MoveAction;
+        private InputAction m_NextItemAction;
+        private InputAction m_PrevItemAction;
+        private InputAction m_UseItemAction;
+
+        private Vector3 m_CurrentWorldMousePos;
+        private Vector2 m_CurrentLookDirection;
+        private Vector3Int m_CurrentTarget;
+
+        private TargetMarker m_TargetMarker;
+
+        private bool m_HasTarget = false;
+        private bool m_IsOverUI = false;
+
+        private bool m_CanControl = true;
+
+        private Animator m_Animator;
+
+        private InteractiveObject m_CurrentInteractiveTarget = null;
+        private Collider2D[] m_CollidersCache = new Collider2D[8];
+
+        private Dictionary<Item, ItemInstance> m_ItemVisualInstance = new();
+
+        private int m_DirXHash = Animator.StringToHash("DirX");
+        private int m_DirYHash = Animator.StringToHash("DirY");
+        private int m_SpeedHash = Animator.StringToHash("Speed");
+
+        void Awake()
+        {
+            if (GameManager.Instance.Player != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            m_Rigidbody = GetComponent<Rigidbody2D>();
+            m_Animator = GetComponentInChildren<Animator>();
+            m_TargetMarker = Target.GetComponent<TargetMarker>();
+            m_TargetMarker.Hide();
+
+            //we can only set DontDestroyOnLoad root object, so ensure its root (Level Designer sometime place the character
+            //prefab already in the scene and can sometime tuck it under other object in the hierarchy)
+            gameObject.transform.SetParent(null);
+
+            GameManager.Instance.Player = this;
+            DontDestroyOnLoad(gameObject);
+
+            // Get references to Pathfinding and TileInteractionManager
+#pragma warning disable CS0618 // Type or member is obsolete
+            m_Pathfinding = FindObjectOfType<Pathfinding>();
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
+            m_TileManager = FindObjectOfType<TileInteractionManager>();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            if (m_Pathfinding == null) Debug.LogError("PlayerController: Pathfinding script not found in scene!");
+            if (m_TileManager == null) Debug.LogError("PlayerController: TileInteractionManager not found in scene!");
+        }
+
+        void Start()
+        {
+            //Retrieve the action from the InputAction asset, enable them and add the callbacks.
+
+            //Move action doesn't have any callback as it will be polled in the movement code directly.
+            m_MoveAction = InputAction.FindAction("Gameplay/Move");
+            m_MoveAction.Enable();
+
+            m_NextItemAction = InputAction.FindAction("Gameplay/EquipNext");
+            m_PrevItemAction = InputAction.FindAction("Gameplay/EquipPrev");
+
+            m_NextItemAction.Enable();
+            m_NextItemAction.performed += context =>
+            {
+                ToggleToolVisual(false);
+                m_Inventory.EquipNext();
+                ToggleToolVisual(true);
+            };
+
+            m_PrevItemAction.Enable();
+            m_PrevItemAction.performed += context =>
+            {
+                ToggleToolVisual(false);
+                m_Inventory.EquipPrev();
+                ToggleToolVisual(true);
+            };
+
+            m_UseItemAction = InputAction.FindAction("Gameplay/Use");
+            m_UseItemAction.Enable();
+
+            m_UseItemAction.performed += context => UseObject();
+
+            m_CurrentLookDirection = Vector2.right;
+
+            m_Inventory.Init();
+
+            foreach (var entry in m_Inventory.Entries)
+            {
+                if (entry.Item != null)
+                    CreateItemVisual(entry.Item);
+            }
+            ToggleToolVisual(true);
+
+            UIHandler.UpdateInventory(m_Inventory);
+            UIHandler.UpdateCoins(m_Coins);
+        }
+
+        private void Update()
+        {
+            m_IsOverUI = EventSystem.current.IsPointerOverGameObject();
+            m_CurrentInteractiveTarget = null;
+            m_HasTarget = false;
+
+            if (!IsMouseOverGameWindow())
+            {
+                UIHandler.ChangeCursor(UIHandler.CursorType.System);
+                return;
+            }
+
+            if (!m_CanControl || m_IsOverUI)
+            {
+                if (m_IsOverUI) UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
+                return;
+            }
+
+            m_CurrentWorldMousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            //check if we are above an interactive object
+            var overlapCol = Physics2D.OverlapPoint(m_CurrentWorldMousePos, 1 << 31);
+
+            if (overlapCol != null)
+            {
+                m_CurrentInteractiveTarget = overlapCol.GetComponent<InteractiveObject>();
+                m_HasTarget = false;
+                UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
+                return;
+            }
+
+            //If we reached here, we are not above UI or an interactive object, so set the cursor to the normal one
+            UIHandler.ChangeCursor(UIHandler.CursorType.Normal);
+
+            var grid = GameManager.Instance.Terrain?.Grid;
+
+            //some scene may not have a terrain (interior scene)
+            if (grid != null)
+            {
+                var currentCell = grid.WorldToCell(transform.position);
+                var pointedCell = grid.WorldToCell(m_CurrentWorldMousePos);
+
+                currentCell.z = 0;
+                pointedCell.z = 0;
+
+                var toTarget = pointedCell - currentCell;
+
+                if (Mathf.Abs(toTarget.x) > 1)
+                {
+                    toTarget.x = (int)Mathf.Sign(toTarget.x);
+                }
+
+                if (Mathf.Abs(toTarget.y) > 1)
+                {
+                    toTarget.y = (int)Mathf.Sign(toTarget.y);
+                }
+
+
+                m_CurrentTarget = currentCell + toTarget;
+                Target.transform.position = GameManager.Instance.Terrain.Grid.GetCellCenterWorld(m_CurrentTarget);
+
+                if (m_Inventory.EquippedItem != null
+                    && m_Inventory.EquippedItem.CanUse(m_CurrentTarget))
+                {
+                    m_HasTarget = true;
+                    m_TargetMarker.Activate();
+                }
+                else
+                {
+                    m_TargetMarker.Hide();
+                }
+            }
+
+            // NULL CHECK:
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.f5Key.wasPressedThisFrame)
+                {
+                    SaveSystem.Save();
+                }
+                else if (Keyboard.current.f9Key.wasPressedThisFrame)
+                {
+                    SaveSystem.Load();
+                }
             }
             else
             {
-                // Logic for interacting with a crafting station if near it
-                // craftingManager.OpenCraftingUI(); // Example
+                // Optional: Log a warning if the keyboard isn't ready, useful for debugging
+                Debug.LogWarning("Keyboard.current is null. Input system might not be initialized yet.");
             }
         }
-    }
 
-    public void OnUseSpecialFeature(InputAction.CallbackContext context)
-    {
-        if (context.performed)
+        void UseObject()
         {
-            Debug.Log("Special Feature Used!");
-            // Example: Find a Scarecrow and activate it (replace with more robust system)
-            // Scarecrow scarecrow = FindObjectOfType<Scarecrow>();
-            // if (scarecrow != null) scarecrow.ActivateScarecrow();
-        }
-    }
+            if (m_IsOverUI)
+                return;
 
-    // New: Handle mouse click for movement
-    public void OnClickToMove(InputAction.CallbackContext context)
-    {
-        if (context.performed)
-        {
-            // Get mouse position in world coordinates
-            Vector2 mouseWorldPos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            
-            // Convert world position to cell position
-            Vector3Int targetCell = tileManager.WorldToCell(mouseWorldPos);
-
-            // Get player's current cell position
-            Vector3Int playerCurrentCell = tileManager.WorldToCell(transform.position);
-
-            // Find path using A*
-            currentPath = pathfinding.FindPath(playerCurrentCell, targetCell);
-
-            if (currentPath != null && currentPath.Count > 0)
+            if (m_CurrentInteractiveTarget != null)
             {
-                pathIndex = 0; // Start at the beginning of the new path
+                m_CurrentInteractiveTarget.InteractedWith();
+                return;
             }
-        }
-    }
 
-    private void FollowPath()
-    {
-        if (currentPath == null || pathIndex >= currentPath.Count)
-        {
-			// No path or path finished, stop movement
-#pragma warning disable CS0618 // Type or member is obsolete
-			rb.velocity = Vector2.zero;
-#pragma warning restore CS0618 // Type or member is obsolete
-			return;
+            if (m_Inventory.EquippedItem != null && m_Inventory.EquippedItem.NeedTarget() && !m_HasTarget) return;
+
+            UseItem();
         }
 
-        Vector3Int targetCell = currentPath[pathIndex];
-        Vector3 targetWorldPos = tileManager.CellToWorld(targetCell);
-
-        // Calculate direction to the next point in the path
-        Vector2 direction = (targetWorldPos - transform.position).normalized;
-
-		// Move the player
-#pragma warning disable CS0618 // Type or member is obsolete
-		rb.velocity = direction * moveSpeed;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-		// Check if player has reached the current target cell
-		if (Vector2.Distance(transform.position, targetWorldPos) < stoppingDistance)
+        void FixedUpdate()
         {
-            pathIndex++; // Move to the next point in the path
-            if (pathIndex >= currentPath.Count)
+            var move = m_MoveAction.ReadValue<Vector2>();
+            FollowPath();
+
+            //note: == and != for vector2 is overriden to take in account floating point imprecision.
+            if (move != Vector2.zero)
             {
-				// Reached end of path
-#pragma warning disable CS0618 // Type or member is obsolete
-				rb.velocity = Vector2.zero;
-#pragma warning restore CS0618 // Type or member is obsolete
-				currentPath = null; // Clear path
+                SetLookDirectionFrom(move);
             }
-        }
-    }
-
-    // --- Interaction Trigger (Same as before) ---
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        Interactable interactable = other.GetComponent<Interactable>();
-        if (interactable != null)
-        {
-            currentInteractable = interactable;
-            // Optionally, show UI prompt
-        }
-    }
-
-    void OnTriggerExit2D(Collider2D other)
-    {
-        Interactable interactable = other.GetComponent<Interactable>();
-        if (interactable != null && currentInteractable == interactable)
-        {
-            currentInteractable = null;
-            // Optionally, hide UI prompt
-        }
-    }
-
-    // Helper for debugging: Draw the path in the editor
-    void OnDrawGizmos()
-    {
-        if (currentPath != null && tileManager != null)
-        {
-            Gizmos.color = Color.blue;
-            for (int i = 0; i < currentPath.Count; i++)
+            else
             {
-                Gizmos.DrawSphere(tileManager.CellToWorld(currentPath[i]), 0.2f);
-                if (i < currentPath.Count - 1)
+                //we aren't moving, look direction is based on the currently aimed toward point
+                if (IsMouseOverGameWindow())
                 {
-                    Gizmos.DrawLine(tileManager.CellToWorld(currentPath[i]), tileManager.CellToWorld(currentPath[i+1]));
+                    Vector3 posToMouse = m_CurrentWorldMousePos - transform.position;
+                    SetLookDirectionFrom(posToMouse);
+                }
+            }
+
+            var movement = move * Speed;
+            var speed = movement.sqrMagnitude;
+
+            m_Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
+            m_Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
+            m_Animator.SetFloat(m_SpeedHash, speed);
+
+            m_Rigidbody.MovePosition(m_Rigidbody.position + movement * Time.deltaTime);
+        }
+
+        bool IsMouseOverGameWindow()
+        {
+            return !(0 > Input.mousePosition.x || 0 > Input.mousePosition.y || Screen.width < Input.mousePosition.x || Screen.height < Input.mousePosition.y);
+        }
+
+        void SetLookDirectionFrom(Vector2 direction)
+        {
+            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+            {
+                m_CurrentLookDirection = direction.x > 0 ? Vector2.right : Vector2.left;
+            }
+            else
+            {
+                m_CurrentLookDirection = direction.y > 0 ? Vector2.up : Vector2.down;
+            }
+        }
+
+        public bool CanFitInInventory(Item item, int count)
+        {
+            return m_Inventory.CanFitItem(item, count);
+        }
+
+        public bool AddItem(Item newItem)
+        {
+            CreateItemVisual(newItem);
+            return m_Inventory.AddItem(newItem);
+        }
+
+        public void SellItem(int inventoryIndex, int count)
+        {
+            if (inventoryIndex < 0 || inventoryIndex > Inventory.Entries.Length)
+                return;
+
+            var item = Inventory.Entries[inventoryIndex].Item;
+
+            if (item == null || !(item is Product product))
+                return;
+
+            int actualCount = m_Inventory.Remove(inventoryIndex, count);
+
+            m_Coins += actualCount * product.SellPrice;
+            UIHandler.UpdateCoins(m_Coins);
+            UIHandler.PlayBuySellSound(transform.position);
+        }
+
+        public bool BuyItem(Item item)
+        {
+            if (item.BuyPrice > m_Coins)
+            {
+                return false;
+            }
+
+            m_Coins -= item.BuyPrice;
+            UIHandler.UpdateCoins(m_Coins);
+            UIHandler.PlayBuySellSound(transform.position);
+            AddItem(item);
+            return true;
+        }
+
+        public void ChangeEquipItem(int index)
+        {
+            //Disable the current item if there is one 
+            ToggleToolVisual(false);
+
+            m_Inventory.EquipItem(index);
+
+            ToggleToolVisual(true);
+        }
+
+        public void ToggleControl(bool canControl)
+        {
+            m_CanControl = canControl;
+            if (canControl)
+            {
+                m_ClickToMoveAction.Enable(); // Enable click-to-move
+                m_MoveAction.Enable(); // <--- REMOVE OR COMMENT OUT THIS LINE
+                m_NextItemAction.Enable();
+                m_PrevItemAction.Enable();
+                m_UseItemAction.Enable();
+            }
+            else
+            {
+                StopMovement(); // Stop player movement when control is toggled off
+                m_ClickToMoveAction.Disable(); // Disable click-to-move
+                                               // m_MoveAction.Disable(); // <--- REMOVE OR COMMENT OUT THIS LINE
+                m_NextItemAction.Disable();
+                m_PrevItemAction.Disable();
+                m_UseItemAction.Disable();
+            }
+        }
+
+        public void UseItem()
+        {
+            if (m_Inventory.EquippedItem == null)
+                return;
+
+            var previousEquipped = m_Inventory.EquippedItem;
+
+            m_Inventory.UseEquippedObject(m_CurrentTarget);
+
+            if (m_ItemVisualInstance.ContainsKey(previousEquipped))
+            {
+                var visual = m_ItemVisualInstance[previousEquipped];
+
+                m_Animator.SetTrigger(visual.AnimatorHash);
+
+                if (visual.Animator != null)
+                {
+                    if (!visual.Instance.activeInHierarchy)
+                    {
+                        //enable all parent as if it's disabled, value cannot be set
+                        var current = visual.Instance.transform;
+                        while (current != null)
+                        {
+                            current.gameObject.SetActive(true);
+                            current = current.parent;
+                        }
+                    }
+
+                    visual.Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
+                    visual.Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
+                    visual.Animator.SetTrigger("Use");
+                }
+            }
+
+            if (m_Inventory.EquippedItem == null)
+            {
+                //this mean we finished using an item, the entry is now empty, so we need to disable the visual if any
+                if (previousEquipped != null)
+                {
+                    //This is a bit of a quick fix, this will let any animation to finish playing before we disable the visual.
+                    StartCoroutine(DelayedObjectDisable(previousEquipped));
                 }
             }
         }
+
+        IEnumerator DelayedObjectDisable(Item item)
+        {
+            yield return new WaitForSeconds(1.0f);
+            ToggleVisualExplicit(false, item);
+        }
+
+        public void Save(ref PlayerSaveData data)
+        {
+            data.Position = m_Rigidbody.position;
+            data.Coins = m_Coins;
+            data.Inventory = new List<InventorySaveData>();
+            m_Inventory.Save(ref data.Inventory);
+        }
+
+        public void Load(PlayerSaveData data)
+        {
+            m_Coins = data.Coins;
+            m_Inventory.Load(data.Inventory);
+
+            m_Rigidbody.position = data.Position;
+        }
+
+        void ToggleToolVisual(bool enable)
+        {
+            if (m_Inventory.EquippedItem != null && m_ItemVisualInstance.TryGetValue(m_Inventory.EquippedItem, out var itemVisual))
+            {
+                itemVisual.Instance.SetActive(enable);
+            }
+        }
+
+        void ToggleVisualExplicit(bool enable, Item item)
+        {
+            if (item != null && m_ItemVisualInstance.TryGetValue(item, out var itemVisual))
+            {
+                itemVisual.Instance.SetActive(enable);
+            }
+        }
+        
+        void CreateItemVisual(Item item)
+        {
+            if (item.VisualPrefab != null && !m_ItemVisualInstance.ContainsKey(item))
+            {
+                var newVisual = Instantiate(item.VisualPrefab, ItemAttachBone, false);
+                newVisual.SetActive(false);
+
+                m_ItemVisualInstance[item] = new ItemInstance()
+                {
+                    Instance = newVisual,
+                    Animator = newVisual.GetComponentInChildren<Animator>(),
+                    AnimatorHash = Animator.StringToHash(item.PlayerAnimatorTriggerUse)
+                };
+            }
+        }
+
+        // --- NEW: FollowPath Method ---
+        private void FollowPath()
+        {
+            // If no path is set or we've reached the end of the path, stop movement
+            if (m_CurrentPath == null || m_PathIndex >= m_CurrentPath.Count)
+            {
+                StopMovement();
+                return;
+            }
+
+            // Get the target cell from the current path
+            Vector3Int targetCell = m_CurrentPath[m_PathIndex];
+            Vector3 targetWorldPos = m_TileManager.CellToWorld(targetCell);
+            // Maintain player's Z-position to avoid camera issues in 2D
+            targetWorldPos.z = transform.position.z;
+
+            // Calculate direction to the next point in the path
+            Vector2 direction = (targetWorldPos - transform.position).normalized;
+
+            // Move the player using Rigidbody2D
+            m_Rigidbody.MovePosition(m_Rigidbody.position + direction * Speed * Time.deltaTime);
+
+            // Update animator for movement
+            // Calculate actual speed for animation (it's 'Speed' when moving)
+            float currentSpeedMagnitude = direction.magnitude > 0.01f ? Speed : 0; // A small threshold to avoid animating tiny movements
+            m_Animator.SetFloat(m_SpeedHash, currentSpeedMagnitude);
+
+            // Set look direction based on the current movement direction
+            if (direction != Vector2.zero)
+            {
+                SetLookDirectionFrom(direction);
+            }
+
+            m_Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
+            m_Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
+
+            // Check if player has reached the current target cell
+            // Use Vector2.Distance as movement is purely 2D
+            if (Vector2.Distance(transform.position, targetWorldPos) < StoppingDistance)
+            {
+                m_PathIndex++; // Move to the next point in the path
+                if (m_PathIndex >= m_CurrentPath.Count)
+                {
+                    // Reached end of path
+                    StopMovement();
+                }
+            }
+        }
+
+        // --- NEW: StopMovement Method ---
+        private void StopMovement()
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            m_Rigidbody.velocity = Vector2.zero; // Stop any remaining Rigidbody velocity
+#pragma warning restore CS0618 // Type or member is obsolete
+            m_CurrentPath = null; // Clear the path
+            m_PathIndex = 0;      // Reset path index
+            m_Animator.SetFloat(m_SpeedHash, 0); // Set animation speed to 0 (idle)
+        }
+
+        // Helper for debugging: Draw the path in the editor
+        void OnDrawGizmos()
+        {
+            if (m_CurrentPath != null && m_TileManager != null)
+            {
+                Gizmos.color = Color.blue; // Path will be drawn in blue
+                for (int i = 0; i < m_CurrentPath.Count; i++)
+                {
+                    // Draw a sphere at each node in the path
+                    Gizmos.DrawSphere(m_TileManager.CellToWorld(m_CurrentPath[i]), 0.2f);
+                    if (i < m_CurrentPath.Count - 1)
+                    {
+                        // Draw a line connecting consecutive nodes
+                        Gizmos.DrawLine(m_TileManager.CellToWorld(m_CurrentPath[i]), m_TileManager.CellToWorld(m_CurrentPath[i + 1]));
+                    }
+                }
+            }
+        }
+    }
+
+    class ItemInstance
+    {
+        public GameObject Instance;
+        public Animator Animator;
+        public int AnimatorHash;
+    }
+
+    [System.Serializable]
+    public struct PlayerSaveData
+    {
+        public Vector3 Position;
+
+        public int Coins;
+        public List<InventorySaveData> Inventory;
     }
 }
