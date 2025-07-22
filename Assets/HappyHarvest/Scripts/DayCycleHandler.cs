@@ -1,8 +1,9 @@
-using System;
+// HappyHarvest/DayCycleHandler.cs
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.UIElements;
+using System;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,31 +12,24 @@ using UnityEditor.UIElements;
 
 namespace HappyHarvest
 {
-
-    /// <summary>
-    /// Handle the cycle of Day and Night. Everything that need to change across time will register itself to this handler
-    /// which will update it when it update (e.g. ShadowInstance, Interpolator etc.).
-    /// The ticking of that system can be stopped, this is useful e.g. if the game is put in pause (or need to do cutscene
-    /// etc..)
-    /// </summary>
     [DefaultExecutionOrder(10)]
     public class DayCycleHandler : MonoBehaviour
     {
         public Transform LightsRoot;
-        
+
         [Header("Day Light")]
         public Light2D DayLight;
         public Gradient DayLightGradient;
 
-        [Header("Night Light")] 
+        [Header("Night Light")]
         public Light2D NightLight;
         public Gradient NightLightGradient;
 
-        [Header("Ambient Light")] 
+        [Header("Ambient Light")]
         public Light2D AmbientLight;
         public Gradient AmbientLightGradient;
 
-        [Header("RimLights")] 
+        [Header("RimLights")]
         public Light2D SunRimLight;
         public Gradient SunRimLightGradient;
         public Light2D MoonRimLight;
@@ -45,91 +39,31 @@ namespace HappyHarvest
         public AnimationCurve ShadowAngle;
         [Tooltip("The scale of the normal shadow length (0 to 1) along the day")]
         public AnimationCurve ShadowLength;
-        
+
         private List<ShadowInstance> m_Shadows = new();
         private List<LightInterpolator> m_LightBlenders = new();
 
         private void Awake()
         {
-            GameManager.Instance.DayCycleHandler = this;
-        }
-
-        /// <summary>
-        /// We use an explicit ticking function instead of update so the GameManager can potentially freeze or change how
-        /// time pass
-        /// </summary>
-        public void Tick()
-        {
-            UpdateLight(GameManager.Instance.CurrentDayRatio);
-        }
-
-        public void UpdateLight(float ratio)
-        {
-            DayLight.color = DayLightGradient.Evaluate(ratio);
-            NightLight.color = NightLightGradient.Evaluate(ratio);
-
-#if UNITY_EDITOR
-            //the test between the define will only happen in editor and not in build, as it is assumed those will be set
-            //in build. But in editor we may want to test without those set. (those were added later in development so
-            //some test scene didn't have those set and we wanted to be able to still test those)
-            if(AmbientLight != null)
-#endif
-                AmbientLight.color = AmbientLightGradient.Evaluate(ratio);
-
-#if UNITY_EDITOR
-            if(SunRimLight != null)
-#endif
-                SunRimLight.color = SunRimLightGradient.Evaluate(ratio);
-            
-#if UNITY_EDITOR
-            if(MoonRimLight != null)
-#endif
-                MoonRimLight.color = MoonRimLightGradient.Evaluate(ratio);
-            
-            LightsRoot.rotation = Quaternion.Euler(0,0, 360.0f * ratio);
-
-            UpdateShadow(ratio);
-        }
-
-        void UpdateShadow(float ratio)
-        {
-            var currentShadowAngle = ShadowAngle.Evaluate(ratio);
-            var currentShadowLength = ShadowLength.Evaluate(ratio);
-
-            var opposedAngle = currentShadowAngle + 0.5f;
-            while (currentShadowAngle > 1.0f)
-                currentShadowAngle -= 1.0f;
-            
-            foreach (var shadow in m_Shadows)
+            if (GameManager.Instance != null)
             {
-                var t = shadow.transform;
-                //use 1.0-angle so that the angle goes clo
-                t.eulerAngles = new Vector3(0,0, currentShadowAngle * 360.0f);
-                t.localScale = new Vector3(1, 1f * shadow.BaseLength * currentShadowLength, 1);
+                GameManager.Instance.DayCycleHandler = this;
             }
-            
-            foreach (var handler in m_LightBlenders)
+            else
             {
-                handler.SetRatio(ratio);
+                Debug.LogError("DayCycleHandler: GameManager.Instance is null in Awake! Check Script Execution Order. This DayCycleHandler will not be registered.");
             }
         }
-        
-        public void Save(ref DayCycleHandlerSaveData data)
-        {
-            //data.TimeOfTheDay = m_CurrentTimeOfTheDay;
-        }
-        
-        public void Load(DayCycleHandlerSaveData data)
-        {
-            //m_CurrentTimeOfTheDay = data.TimeOfTheDay;
-            //StartingTime = m_CurrentTimeOfTheDay;
-        }
+
+        // ... (Tick, UpdateLight, UpdateShadow methods) ...
+
+        // --- FIXED REGISTER/UNREGISTER METHODS ---
 
         public static void RegisterShadow(ShadowInstance shadow)
         {
+            // This part runs ONLY IN EDITOR, when Application.isPlaying is false
+            // (e.g., for previewing in the scene view without running the game)
 #if UNITY_EDITOR
-            //in the editor when not running, we find the instance manually. Less efficient but not a problem at edit time
-            //allow to be able to previz shadow in editor 
             if (!Application.isPlaying)
             {
                 var instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
@@ -137,21 +71,25 @@ namespace HappyHarvest
                 {
                     instance.m_Shadows.Add(shadow);
                 }
+                return; // Return early for editor-only case
+            }
+#endif
+            // This part runs at RUNTIME (both in Editor and in Builds)
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_Shadows.Add(shadow);
             }
             else
             {
-#endif
-                GameManager.Instance.DayCycleHandler.m_Shadows.Add(shadow);
-#if UNITY_EDITOR
+                // This might happen if GameManager/DayCycleHandler isn't set up yet,
+                // which suggests a script execution order issue for runtime.
+                Debug.LogWarning("DayCycleHandler.RegisterShadow: GameManager.Instance or DayCycleHandler is null. Shadow not registered at runtime.");
             }
-#endif
         }
 
         public static void UnregisterShadow(ShadowInstance shadow)
         {
 #if UNITY_EDITOR
-            //in the editor when not running, we find the instance manually. Less efficient but not a problem at edit time
-            //allow to be able to previz shadow in editor 
             if (!Application.isPlaying)
             {
                 var instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
@@ -159,22 +97,22 @@ namespace HappyHarvest
                 {
                     instance.m_Shadows.Remove(shadow);
                 }
+                return;
+            }
+#endif
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_Shadows.Remove(shadow);
             }
             else
             {
-#endif
-                if(GameManager.Instance?.DayCycleHandler != null)
-                    GameManager.Instance.DayCycleHandler.m_Shadows.Remove(shadow);
-#if UNITY_EDITOR
+                Debug.LogWarning("DayCycleHandler.UnregisterShadow: GameManager.Instance or DayCycleHandler is null. Shadow not unregistered at runtime.");
             }
-#endif
         }
 
         public static void RegisterLightBlender(LightInterpolator interpolator)
         {
 #if UNITY_EDITOR
-            //in the editor when not running, we find the instance manually. Less efficient but not a problem at edit time
-            //allow to be able to previz shadow in editor 
             if (!Application.isPlaying)
             {
                 var instance = FindFirstObjectByType<DayCycleHandler>();
@@ -182,21 +120,22 @@ namespace HappyHarvest
                 {
                     instance.m_LightBlenders.Add(interpolator);
                 }
+                return;
+            }
+#endif
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_LightBlenders.Add(interpolator);
             }
             else
             {
-#endif
-            GameManager.Instance.DayCycleHandler.m_LightBlenders.Add(interpolator);
-#if UNITY_EDITOR
+                Debug.LogWarning("DayCycleHandler.RegisterLightBlender: GameManager.Instance or DayCycleHandler is null. LightInterpolator not registered at runtime.");
             }
-#endif
         }
 
         public static void UnregisterLightBlender(LightInterpolator interpolator)
         {
 #if UNITY_EDITOR
-            //in the editor when not running, we find the instance manually. Less efficient but not a problem at edit time
-            //allow to be able to previz shadow in editor 
             if (!Application.isPlaying)
             {
                 var instance = FindFirstObjectByType<DayCycleHandler>();
@@ -204,66 +143,166 @@ namespace HappyHarvest
                 {
                     instance.m_LightBlenders.Remove(interpolator);
                 }
+                return;
+            }
+#endif
+            if (GameManager.Instance != null && GameManager.Instance.DayCycleHandler != null)
+            {
+                GameManager.Instance.DayCycleHandler.m_LightBlenders.Remove(interpolator);
             }
             else
             {
-#endif
-            if(GameManager.Instance?.DayCycleHandler != null)
-                GameManager.Instance.DayCycleHandler.m_LightBlenders.Remove(interpolator);
-#if UNITY_EDITOR
+                Debug.LogWarning("DayCycleHandler.UnregisterLightBlender: GameManager.Instance or DayCycleHandler is null. LightInterpolator not unregistered at runtime.");
             }
-#endif
         }
+
+        public void Tick()
+        {
+            // Ensure GameManager.Instance is not null before accessing CurrentDayRatio
+            if (GameManager.Instance != null)
+            {
+                UpdateLight(GameManager.Instance.CurrentDayRatio);
+            }
+            else
+            {
+                // If GameManager is null, we can't get the ratio, so skip update or use a default
+                // Debug.LogWarning("DayCycleHandler: GameManager.Instance is null in Tick. Skipping light update.");
+            }
+        }
+
+        public void UpdateLight(float ratio)
+        {
+            // Add null checks for all Light2D references before using them
+            if (DayLight != null)
+            {
+                DayLight.color = DayLightGradient.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("DayLight is not assigned in DayCycleHandler. UpdateLight cannot set its color.");
+            }
+
+            if (NightLight != null)
+            {
+                NightLight.color = NightLightGradient.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("NightLight is not assigned in DayCycleHandler. UpdateLight cannot set its color.");
+            }
+
+            // Removed UNITY_EDITOR checks as they are now redundant with the direct null checks
+            if (AmbientLight != null)
+            {
+                AmbientLight.color = AmbientLightGradient.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("AmbientLight is not assigned in DayCycleHandler. UpdateLight cannot set its color.");
+            }
+
+            if (SunRimLight != null)
+            {
+                SunRimLight.color = SunRimLightGradient.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("SunRimLight is not assigned in DayCycleHandler. UpdateLight cannot set its color.");
+            }
+
+            if (MoonRimLight != null)
+            {
+                MoonRimLight.color = MoonRimLightGradient.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("MoonRimLight is not assigned in DayCycleHandler. UpdateLight cannot set its color.");
+            }
+
+            if (LightsRoot != null)
+            {
+                LightsRoot.rotation = Quaternion.Euler(0, 0, 360.0f * ratio);
+            }
+            else
+            {
+                Debug.LogWarning("LightsRoot is not assigned in DayCycleHandler. Cannot rotate lights.");
+            }
+
+            UpdateShadow(ratio);
+        }
+
+        void UpdateShadow(float ratio)
+        {
+            // Ensure AnimationCurves are not null before evaluating
+            float currentShadowAngle = 0;
+            if (ShadowAngle != null)
+            {
+                currentShadowAngle = ShadowAngle.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("ShadowAngle AnimationCurve is not assigned in DayCycleHandler.");
+            }
+
+            float currentShadowLength = 0;
+            if (ShadowLength != null)
+            {
+                currentShadowLength = ShadowLength.Evaluate(ratio);
+            }
+            else
+            {
+                Debug.LogWarning("ShadowLength AnimationCurve is not assigned in DayCycleHandler.");
+            }
+
+
+            while (currentShadowAngle > 1.0f)
+                currentShadowAngle -= 1.0f;
+
+            foreach (var shadow in m_Shadows)
+            {
+                if (shadow != null && shadow.transform != null) // Add null check for shadow itself
+                {
+                    var t = shadow.transform;
+                    t.eulerAngles = new Vector3(0, 0, currentShadowAngle * 360.0f);
+                    t.localScale = new Vector3(1, 1f * shadow.BaseLength * currentShadowLength, 1);
+                }
+            }
+
+            foreach (var handler in m_LightBlenders)
+            {
+                if (handler != null) // Add null check for handler
+                {
+                    handler.SetRatio(ratio);
+                }
+            }
+        }
+
+        internal void Load(DayCycleHandlerSaveData timeSaveData)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal object Save(ref DayCycleHandlerSaveData timeSaveData)
+        {
+            throw new NotImplementedException();
+        }
+
+        // ... rest of your code ...
     }
+
+    // Ensure ShadowInstance and LightInterpolator classes are defined elsewhere in your project
+    // Example:
+    // public class ShadowInstance : MonoBehaviour { public float BaseLength; /* ... */ }
+    // public class LightInterpolator : MonoBehaviour { public void SetRatio(float ratio); /* ... */ }
 
     [System.Serializable]
     public struct DayCycleHandlerSaveData
     {
         public float TimeOfTheDay;
     }
-    
-    
+
 #if UNITY_EDITOR
-    // Wrapping a custom editor between UNITY_EDITOR define check allow to keep it in the same 
-    // file as this part will be stripped when building for standalone (where Editor class doesn't exist).
-    // Don't forget to also wrap the UnityEditor using at the top of the file between those define check too.
-    
-    // Show a slider that allow to test a specific time to help define colors.
-    [CustomEditor(typeof(DayCycleHandler))]
-    class DayCycleEditor : Editor
-    {
-        private DayCycleHandler m_Target;
-
-        public override VisualElement CreateInspectorGUI()
-        {
-            m_Target = target as DayCycleHandler;
-
-            var root = new VisualElement();
-            
-            InspectorElement.FillDefaultInspector(root, serializedObject, this);
-            
-            var slider = new Slider(0.0f, 1.0f);
-            slider.label = "Test time 0:00";
-            slider.RegisterValueChangedCallback(evt =>
-            {
-                m_Target.UpdateLight(evt.newValue);
-                
-                slider.label = $"Test Time {GameManager.GetTimeAsString(evt.newValue)} ({evt.newValue:F2})";
-                SceneView.RepaintAll();
-            });
-            
-            //registering click event, it's very catch all but not way to do a change check for control change
-            root.RegisterCallback<ClickEvent>(evt =>
-            {
-                m_Target.UpdateLight(slider.value);
-                SceneView.RepaintAll();
-            });
-            
-            root.Add(slider);
-
-            return root;
-        }
-    }
+    // ... DayCycleEditor code ...
 #endif
 
 }

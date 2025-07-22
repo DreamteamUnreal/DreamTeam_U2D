@@ -30,7 +30,7 @@ namespace HappyHarvest
         public static void Save()
         {
             GameManager.Instance.Player.Save(ref s_CurrentData.PlayerData);
-            GameManager.Instance.DayCycleHandler.Save(ref s_CurrentData.TimeSaveData);
+            object value = GameManager.Instance.DayCycleHandler.Save(ref s_CurrentData.TimeSaveData);
 
             string savefile = Application.persistentDataPath + "/save.sav";
             File.WriteAllText(savefile, JsonUtility.ToJson(s_CurrentData));

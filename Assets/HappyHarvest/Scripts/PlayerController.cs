@@ -1,3 +1,4 @@
+// HappyHarvet/PlayerController.cs
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,6 +25,13 @@ namespace HappyHarvest
             }
         }
 
+        // Pathfinding and Tilemap references
+        private Pathfinding m_Pathfinding;
+        private TileInteractionManager m_TileManager;
+        private List<Vector3Int> m_CurrentPath; // The path the player is currently following
+        private int m_PathIndex;                // Current index in the path
+        public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
+        private InputAction m_ClickToMoveAction; // New Action for click-to-move input
         public InventorySystem Inventory => m_Inventory;
         public Animator Animator => m_Animator;
 
@@ -35,11 +43,11 @@ namespace HappyHarvest
 
         [SerializeField]
         private InventorySystem m_Inventory;
-        
+
         private Rigidbody2D m_Rigidbody;
 
         private Vector3 m_SpawnPosition;
-        
+
         private InputAction m_MoveAction;
         private InputAction m_NextItemAction;
         private InputAction m_PrevItemAction;
@@ -74,24 +82,35 @@ namespace HappyHarvest
                 Destroy(gameObject);
                 return;
             }
-            
+
             m_Rigidbody = GetComponent<Rigidbody2D>();
             m_Animator = GetComponentInChildren<Animator>();
             m_TargetMarker = Target.GetComponent<TargetMarker>();
             m_TargetMarker.Hide();
-            
+
             //we can only set DontDestroyOnLoad root object, so ensure its root (Level Designer sometime place the character
             //prefab already in the scene and can sometime tuck it under other object in the hierarchy)
             gameObject.transform.SetParent(null);
-            
+
             GameManager.Instance.Player = this;
             DontDestroyOnLoad(gameObject);
+
+            // Get references to Pathfinding and TileInteractionManager
+#pragma warning disable CS0618 // Type or member is obsolete
+            m_Pathfinding = FindObjectOfType<Pathfinding>();
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
+            m_TileManager = FindObjectOfType<TileInteractionManager>();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            if (m_Pathfinding == null) Debug.LogError("PlayerController: Pathfinding script not found in scene!");
+            if (m_TileManager == null) Debug.LogError("PlayerController: TileInteractionManager not found in scene!");
         }
-        
+
         void Start()
         {
             //Retrieve the action from the InputAction asset, enable them and add the callbacks.
-            
+
             //Move action doesn't have any callback as it will be polled in the movement code directly.
             m_MoveAction = InputAction.FindAction("Gameplay/Move");
             m_MoveAction.Enable();
@@ -106,7 +125,7 @@ namespace HappyHarvest
                 m_Inventory.EquipNext();
                 ToggleToolVisual(true);
             };
-            
+
             m_PrevItemAction.Enable();
             m_PrevItemAction.performed += context =>
             {
@@ -119,9 +138,9 @@ namespace HappyHarvest
             m_UseItemAction.Enable();
 
             m_UseItemAction.performed += context => UseObject();
-            
+
             m_CurrentLookDirection = Vector2.right;
-            
+
             m_Inventory.Init();
 
             foreach (var entry in m_Inventory.Entries)
@@ -130,7 +149,7 @@ namespace HappyHarvest
                     CreateItemVisual(entry.Item);
             }
             ToggleToolVisual(true);
-            
+
             UIHandler.UpdateInventory(m_Inventory);
             UIHandler.UpdateCoins(m_Coins);
         }
@@ -140,7 +159,7 @@ namespace HappyHarvest
             m_IsOverUI = EventSystem.current.IsPointerOverGameObject();
             m_CurrentInteractiveTarget = null;
             m_HasTarget = false;
-            
+
             if (!IsMouseOverGameWindow())
             {
                 UIHandler.ChangeCursor(UIHandler.CursorType.System);
@@ -152,11 +171,11 @@ namespace HappyHarvest
                 if (m_IsOverUI) UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
                 return;
             }
-            
+
             m_CurrentWorldMousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             //check if we are above an interactive object
             var overlapCol = Physics2D.OverlapPoint(m_CurrentWorldMousePos, 1 << 31);
-                
+
             if (overlapCol != null)
             {
                 m_CurrentInteractiveTarget = overlapCol.GetComponent<InteractiveObject>();
@@ -164,8 +183,7 @@ namespace HappyHarvest
                 UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
                 return;
             }
-          
-            
+
             //If we reached here, we are not above UI or an interactive object, so set the cursor to the normal one
             UIHandler.ChangeCursor(UIHandler.CursorType.Normal);
 
@@ -208,35 +226,45 @@ namespace HappyHarvest
                 }
             }
 
-            if (Keyboard.current.f5Key.wasPressedThisFrame)
+            // NULL CHECK:
+            if (Keyboard.current != null)
             {
-                SaveSystem.Save();
+                if (Keyboard.current.f5Key.wasPressedThisFrame)
+                {
+                    SaveSystem.Save();
+                }
+                else if (Keyboard.current.f9Key.wasPressedThisFrame)
+                {
+                    SaveSystem.Load();
+                }
             }
-            else if (Keyboard.current.f9Key.wasPressedThisFrame)
+            else
             {
-                SaveSystem.Load();
+                // Optional: Log a warning if the keyboard isn't ready, useful for debugging
+                Debug.LogWarning("Keyboard.current is null. Input system might not be initialized yet.");
             }
         }
 
         void UseObject()
         {
-            if(m_IsOverUI)
+            if (m_IsOverUI)
                 return;
-            
+
             if (m_CurrentInteractiveTarget != null)
             {
                 m_CurrentInteractiveTarget.InteractedWith();
                 return;
             }
-            
+
             if (m_Inventory.EquippedItem != null && m_Inventory.EquippedItem.NeedTarget() && !m_HasTarget) return;
-            
+
             UseItem();
         }
 
         void FixedUpdate()
         {
             var move = m_MoveAction.ReadValue<Vector2>();
+            FollowPath();
 
             //note: == and != for vector2 is overriden to take in account floating point imprecision.
             if (move != Vector2.zero)
@@ -255,7 +283,7 @@ namespace HappyHarvest
 
             var movement = move * Speed;
             var speed = movement.sqrMagnitude;
-            
+
             m_Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
             m_Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
             m_Animator.SetFloat(m_SpeedHash, speed);
@@ -266,7 +294,7 @@ namespace HappyHarvest
         bool IsMouseOverGameWindow()
         {
             return !(0 > Input.mousePosition.x || 0 > Input.mousePosition.y || Screen.width < Input.mousePosition.x || Screen.height < Input.mousePosition.y);
-        } 
+        }
 
         void SetLookDirectionFrom(Vector2 direction)
         {
@@ -284,7 +312,7 @@ namespace HappyHarvest
         {
             return m_Inventory.CanFitItem(item, count);
         }
-        
+
         public bool AddItem(Item newItem)
         {
             CreateItemVisual(newItem);
@@ -300,7 +328,7 @@ namespace HappyHarvest
 
             if (item == null || !(item is Product product))
                 return;
-            
+
             int actualCount = m_Inventory.Remove(inventoryIndex, count);
 
             m_Coins += actualCount * product.SellPrice;
@@ -326,7 +354,7 @@ namespace HappyHarvest
         {
             //Disable the current item if there is one 
             ToggleToolVisual(false);
-            
+
             m_Inventory.EquipItem(index);
 
             ToggleToolVisual(true);
@@ -337,14 +365,17 @@ namespace HappyHarvest
             m_CanControl = canControl;
             if (canControl)
             {
-                m_MoveAction.Enable();
+                m_ClickToMoveAction.Enable(); // Enable click-to-move
+                m_MoveAction.Enable(); // <--- REMOVE OR COMMENT OUT THIS LINE
                 m_NextItemAction.Enable();
                 m_PrevItemAction.Enable();
                 m_UseItemAction.Enable();
             }
             else
             {
-                m_MoveAction.Disable();
+                StopMovement(); // Stop player movement when control is toggled off
+                m_ClickToMoveAction.Disable(); // Disable click-to-move
+                                               // m_MoveAction.Disable(); // <--- REMOVE OR COMMENT OUT THIS LINE
                 m_NextItemAction.Disable();
                 m_PrevItemAction.Disable();
                 m_UseItemAction.Disable();
@@ -353,11 +384,11 @@ namespace HappyHarvest
 
         public void UseItem()
         {
-            if(m_Inventory.EquippedItem == null)
+            if (m_Inventory.EquippedItem == null)
                 return;
-            
+
             var previousEquipped = m_Inventory.EquippedItem;
-            
+
             m_Inventory.UseEquippedObject(m_CurrentTarget);
 
             if (m_ItemVisualInstance.ContainsKey(previousEquipped))
@@ -378,13 +409,13 @@ namespace HappyHarvest
                             current = current.parent;
                         }
                     }
-                    
+
                     visual.Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
                     visual.Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
                     visual.Animator.SetTrigger("Use");
                 }
             }
-            
+
             if (m_Inventory.EquippedItem == null)
             {
                 //this mean we finished using an item, the entry is now empty, so we need to disable the visual if any
@@ -433,20 +464,99 @@ namespace HappyHarvest
                 itemVisual.Instance.SetActive(enable);
             }
         }
-
+        
         void CreateItemVisual(Item item)
         {
             if (item.VisualPrefab != null && !m_ItemVisualInstance.ContainsKey(item))
             {
                 var newVisual = Instantiate(item.VisualPrefab, ItemAttachBone, false);
                 newVisual.SetActive(false);
-                
+
                 m_ItemVisualInstance[item] = new ItemInstance()
                 {
                     Instance = newVisual,
                     Animator = newVisual.GetComponentInChildren<Animator>(),
                     AnimatorHash = Animator.StringToHash(item.PlayerAnimatorTriggerUse)
                 };
+            }
+        }
+
+        // --- NEW: FollowPath Method ---
+        private void FollowPath()
+        {
+            // If no path is set or we've reached the end of the path, stop movement
+            if (m_CurrentPath == null || m_PathIndex >= m_CurrentPath.Count)
+            {
+                StopMovement();
+                return;
+            }
+
+            // Get the target cell from the current path
+            Vector3Int targetCell = m_CurrentPath[m_PathIndex];
+            Vector3 targetWorldPos = m_TileManager.CellToWorld(targetCell);
+            // Maintain player's Z-position to avoid camera issues in 2D
+            targetWorldPos.z = transform.position.z;
+
+            // Calculate direction to the next point in the path
+            Vector2 direction = (targetWorldPos - transform.position).normalized;
+
+            // Move the player using Rigidbody2D
+            m_Rigidbody.MovePosition(m_Rigidbody.position + direction * Speed * Time.deltaTime);
+
+            // Update animator for movement
+            // Calculate actual speed for animation (it's 'Speed' when moving)
+            float currentSpeedMagnitude = direction.magnitude > 0.01f ? Speed : 0; // A small threshold to avoid animating tiny movements
+            m_Animator.SetFloat(m_SpeedHash, currentSpeedMagnitude);
+
+            // Set look direction based on the current movement direction
+            if (direction != Vector2.zero)
+            {
+                SetLookDirectionFrom(direction);
+            }
+
+            m_Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
+            m_Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
+
+            // Check if player has reached the current target cell
+            // Use Vector2.Distance as movement is purely 2D
+            if (Vector2.Distance(transform.position, targetWorldPos) < StoppingDistance)
+            {
+                m_PathIndex++; // Move to the next point in the path
+                if (m_PathIndex >= m_CurrentPath.Count)
+                {
+                    // Reached end of path
+                    StopMovement();
+                }
+            }
+        }
+
+        // --- NEW: StopMovement Method ---
+        private void StopMovement()
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            m_Rigidbody.velocity = Vector2.zero; // Stop any remaining Rigidbody velocity
+#pragma warning restore CS0618 // Type or member is obsolete
+            m_CurrentPath = null; // Clear the path
+            m_PathIndex = 0;      // Reset path index
+            m_Animator.SetFloat(m_SpeedHash, 0); // Set animation speed to 0 (idle)
+        }
+
+        // Helper for debugging: Draw the path in the editor
+        void OnDrawGizmos()
+        {
+            if (m_CurrentPath != null && m_TileManager != null)
+            {
+                Gizmos.color = Color.blue; // Path will be drawn in blue
+                for (int i = 0; i < m_CurrentPath.Count; i++)
+                {
+                    // Draw a sphere at each node in the path
+                    Gizmos.DrawSphere(m_TileManager.CellToWorld(m_CurrentPath[i]), 0.2f);
+                    if (i < m_CurrentPath.Count - 1)
+                    {
+                        // Draw a line connecting consecutive nodes
+                        Gizmos.DrawLine(m_TileManager.CellToWorld(m_CurrentPath[i]), m_TileManager.CellToWorld(m_CurrentPath[i + 1]));
+                    }
+                }
             }
         }
     }
@@ -462,7 +572,7 @@ namespace HappyHarvest
     public struct PlayerSaveData
     {
         public Vector3 Position;
-        
+
         public int Coins;
         public List<InventorySaveData> Inventory;
     }

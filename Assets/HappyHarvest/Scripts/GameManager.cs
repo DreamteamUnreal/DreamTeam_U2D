@@ -1,4 +1,4 @@
-using System;
+//HappyHarvest/GameManager.cs
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -80,16 +80,16 @@ namespace HappyHarvest
         {
             s_Instance = this;
             DontDestroyOnLoad(gameObject);
-            
+
             m_IsTicking = true;
-            
+
             ItemDatabase.Init();
             CropDatabase.Init();
-            
+
             Storage = new Storage();
-            
+
             m_CurrentTimeOfTheDay = StartingTime;
-            
+
             //we need to ensure that we don't have a day length at 0, otherwise we will get stuck into infinite loop in update
             //(and a day with 0 length makes no sense)
             if (DayDurationInSeconds <= 0.0f)
