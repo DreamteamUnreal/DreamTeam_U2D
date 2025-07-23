@@ -1,5 +1,5 @@
 // PieScoreManager.cs
-using TMPro; // Make sure TextMeshPro is imported in your project if not already
+using TMPro; // Make sure TextMeshPro is imported in the project if not already
 using UnityEngine;
 using Random = UnityEngine.Random; // Explicitly use UnityEngine.Random to avoid ambiguity with System.Random
 
@@ -132,7 +132,7 @@ namespace HappyHarvest // Add the HappyHarvest namespace
                     PlayerPrefs.Save();
                     Debug.Log($"New High Score: {highScore}");
                 }
-                // You might want to trigger a "Game Over" UI screen here
+                // Might want to trigger a "Game Over" UI screen here
                 // GameManager.Instance.ShowGameOverScreen(); // Example
             }
             else
