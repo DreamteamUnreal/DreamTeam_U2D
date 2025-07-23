@@ -1,9 +1,12 @@
 //GameManager.cs
-using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+
+using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Tilemaps;
-using UnityEngine.SceneManagement; // Required for SceneManager
+
+// Required for SceneManager
 
 namespace HappyHarvest
 {
@@ -50,9 +53,9 @@ namespace HappyHarvest
         [Tooltip("The current progress of the day (0.0 = start of day, 1.0 = end of day).")]
         public float CurrentDayRatio = 0.0f; // This should ideally be driven by DayCycleHandler
 
-		// Removed [System.Obsolete] as Awake is now fully functional
-		[System.Obsolete]
-		void Awake()
+        // Removed [System.Obsolete] as Awake is now fully functional
+        [System.Obsolete]
+        void Awake()
         {
             // --- Singleton Initialization ---
             if (Instance != null && Instance != this)
@@ -212,14 +215,14 @@ namespace HappyHarvest
             }
         }
 
-		/// <summary>
-		/// Initiates a scene transition. Saves current scene data, loads the new scene,
-		/// and spawns the player at the target spawn point in the new scene.
-		/// </summary>
-		/// <param name="targetSceneBuildIndex">The build index of the scene to load.</param>
-		/// <param name="targetSpawnIndex">The index of the spawn point in the target scene.</param>
-		[System.Obsolete]
-		public void MoveTo(int targetSceneBuildIndex, int targetSpawnIndex)
+        /// <summary>
+        /// Initiates a scene transition. Saves current scene data, loads the new scene,
+        /// and spawns the player at the target spawn point in the new scene.
+        /// </summary>
+        /// <param name="targetSceneBuildIndex">The build index of the scene to load.</param>
+        /// <param name="targetSpawnIndex">The index of the spawn point in the target scene.</param>
+        [System.Obsolete]
+        public void MoveTo(int targetSceneBuildIndex, int targetSpawnIndex)
         {
             // 1. Save current scene's data before leaving it
             SaveSystem.SaveCurrentSceneDataToLookup();
