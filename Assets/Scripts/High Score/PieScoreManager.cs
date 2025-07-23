@@ -125,7 +125,7 @@ public class PieScoreManager : MonoBehaviour
         }
     }
 
-   private void UpdateUI()
+    private void UpdateUI()
     {
         if (currentPiesText != null)
             currentPiesText.text = $"{piesMade}";
