@@ -31,7 +31,7 @@ namespace HappyHarvest
         private List<Vector3Int> m_CurrentPath; // The path the player is currently following
         private int m_PathIndex;                // Current index in the path
         public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
-        private InputAction m_ClickToMoveAction; // New Action for click-to-move input
+        private readonly InputAction m_ClickToMoveAction; // New Action for click-to-move input
 
         public InventorySystem Inventory => m_Inventory;
         public Animator Animator => m_Animator;
@@ -68,14 +68,14 @@ namespace HappyHarvest
         private Animator m_Animator;
 
         private InteractiveObject m_CurrentInteractiveTarget = null;
-        private Collider2D[] m_CollidersCache = new Collider2D[8];
+        private readonly Collider2D[] m_CollidersCache = new Collider2D[8];
 
         // Changed dictionary key from Item to string (ItemID) as per previous fix
-        private Dictionary<string, ItemInstance> m_ItemVisualInstance = new();
+        private readonly Dictionary<string, ItemInstance> m_ItemVisualInstance = new();
 
-        private int m_DirXHash = Animator.StringToHash("DirX");
-        private int m_DirYHash = Animator.StringToHash("DirY");
-        private int m_SpeedHash = Animator.StringToHash("Speed");
+        private readonly int m_DirXHash = Animator.StringToHash("DirX");
+        private readonly int m_DirYHash = Animator.StringToHash("DirY");
+        private readonly int m_SpeedHash = Animator.StringToHash("Speed");
 
         void Awake()
         {
@@ -151,7 +151,8 @@ namespace HappyHarvest
             UIHandler.UpdateCoins(m_Coins);
         }
 
-        private void Update()
+		[System.Obsolete]
+		private void Update()
         {
             m_IsOverUI = EventSystem.current.IsPointerOverGameObject();
             m_CurrentInteractiveTarget = null;
