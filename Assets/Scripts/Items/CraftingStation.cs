@@ -17,7 +17,7 @@ namespace HappyHarvest
 
         public override void InteractedWith()
         {
-            if (GameManager.Instance == null || GameManager.Instance.Player == null || GameManager.Instance.Player.craftingManager == null)
+            if (GameManager.Instance == null || GameManager.Instance.Player == null || GameManager.Instance.Player.CraftingManager == null)
             {
                 Debug.LogWarning("CraftingStation: GameManager, Player, or Player's CraftingManager is null.");
                 return;
