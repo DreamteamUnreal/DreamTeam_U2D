@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Cursor = UnityEngine.Cursor;
 
-
 namespace HappyHarvest
 {
     /// <summary>
@@ -138,10 +137,8 @@ namespace HappyHarvest
                 Debug.LogWarning("UIHandler: 'MarketPopup' not found in UXML.");
             }
 
-
             m_TimerLabel = m_Document.rootVisualElement.Q<Label>("Timer");
             if (m_TimerLabel == null) Debug.LogWarning("UIHandler: 'Timer' label not found in UXML.");
-
 
             m_SettingMenu = new SettingMenu(m_Document.rootVisualElement);
             m_SettingMenu.OnOpen += () => { if (GameManager.Instance != null) GameManager.Instance.Pause(); };
@@ -157,7 +154,6 @@ namespace HappyHarvest
             {
                 Debug.LogWarning("UIHandler: 'WarehousePopup' not found in UXML. Warehouse UI might not function.");
             }
-
 
             m_Blocker = m_Document.rootVisualElement.Q<VisualElement>("Blocker");
             if (m_Blocker != null)
@@ -177,7 +173,6 @@ namespace HappyHarvest
                 Debug.LogWarning("UIHandler: 'Blocker' VisualElement not found in UXML.");
             }
 
-
             m_SunLabel = m_Document.rootVisualElement.Q<Label>("SunLabel");
             m_RainLabel = m_Document.rootVisualElement.Q<Label>("RainLabel");
             m_ThunderLabel = m_Document.rootVisualElement.Q<Label>("ThunderLabel");
@@ -187,7 +182,6 @@ namespace HappyHarvest
             if (m_RainLabel != null) m_RainLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Rain); })); else Debug.LogWarning("UIHandler: 'RainLabel' not found.");
             if (m_ThunderLabel != null) m_ThunderLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Thunder); })); else Debug.LogWarning("UIHandler: 'ThunderLabel' not found.");
         }
-
 
         void Update()
         {
@@ -202,7 +196,6 @@ namespace HappyHarvest
                 // Debug.LogWarning("UIHandler Update: GameManager.Instance or m_TimerLabel is null. Cannot update timer.");
             }
         }
-
 
         private void OnApplicationFocus(bool hasFocus)
         {
@@ -436,7 +429,6 @@ namespace HappyHarvest
                     m_ItemCountLabels[i].style.visibility = Visibility.Visible;
                     m_ItemCountLabels[i].text = system.Entries[i].StackSize.ToString();
                 }
-
 
                 if (system.EquippedItemIdx == i)
                 {
