@@ -1,6 +1,6 @@
+//PieScoreManager.cs
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class PieScoreManager : MonoBehaviour
 {
@@ -46,12 +46,6 @@ public class PieScoreManager : MonoBehaviour
         UpdateUI();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public void AddPie()
     {
         piesMade++;
@@ -59,7 +53,7 @@ public class PieScoreManager : MonoBehaviour
 
         if (piesMade > piesRequired)
         {
-            int bonus = 80 + Random.Range(50, 91); // 80 + random 50–90
+            int bonus = 80 + Random.Range(50, 91); // 80 + random 50ï¿½90
             playerScore += bonus;
             Debug.Log($"Bonus Pie! +{bonus} points");
         }
@@ -112,7 +106,7 @@ public class PieScoreManager : MonoBehaviour
     {
         if (piesMade < piesRequired)
         {
-            Debug.Log("Game Over – not enough pies!");
+            Debug.Log("Game Over ï¿½ not enough pies!");
             
             // save a new high score if achieved
             if (totalPiesMade > highScore)
