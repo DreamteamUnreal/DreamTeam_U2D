@@ -29,6 +29,10 @@ namespace HappyHarvest
         [Tooltip("List of items available for purchase in the market.")]
         public Item[] MarketEntries; // Assign your buyable Item ScriptableObjects here
 
+        // --- NEW: Property for Loaded Scene Data ---
+        // This will hold the save data for the currently loaded scene.
+        // It's private set because GameManager itself will manage loading/setting this.
+        public SceneSaveData LoadedSceneData { get; private set; }
         // Public property to expose the current day ratio (0.0 to 1.0)
         // This would typically be managed by DayCycleHandler and exposed through a method or property.
         // For simplicity, let's assume DayCycleHandler updates this or GameManager manages it.
@@ -111,12 +115,27 @@ namespace HappyHarvest
 
         void Update()
         {
-            // Example: Advance day cycle based on time (if DayCycleHandler isn't doing it directly)
-            // This assumes a simple time progression. Your DayCycleHandler.Tick() is called by GameManager.
-            // So, you need a mechanism to advance CurrentDayRatio.
-            // For example, if a day lasts 60 seconds:
-            // CurrentDayRatio = (Time.time / 60.0f) % 1.0f;
-            // DayCycleHandler?.Tick(); // Call the DayCycleHandler's tick
+            DayCycleHandler.Tick(); // Call the DayCycleHandler's tick
+        }
+
+        // --- NEW: Methods to set/get LoadedSceneData (used by SaveSystem) ---
+        public void SetLoadedSceneData(SceneSaveData data)
+        {
+            LoadedSceneData = data;
+            Debug.Log("GameManager: Loaded scene data has been set.");
+            // Here, you would typically apply the loaded scene data to your scene objects.
+            // For example, iterate through InteractiveObjects and restore their states.
+            // This logic would be more complex and depend on how you identify and manage scene objects.
+        }
+
+        public SceneSaveData GetCurrentSceneData()
+        {
+            // This method would collect the current state of the scene to be saved.
+            // For example, iterate through active InteractiveObjects and collect their data.
+            SceneSaveData currentData = new SceneSaveData();
+            // currentData.InteractiveObjects = new List<InteractiveObjectSaveData>();
+            // foreach (var obj in FindObjectsOfType<InteractiveObject>()) { /* collect data */ }
+            return currentData;
         }
 
         /// <summary>

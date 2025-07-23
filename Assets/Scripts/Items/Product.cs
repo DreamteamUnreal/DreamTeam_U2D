@@ -13,15 +13,5 @@ namespace HappyHarvest
         {
             return true;
         }
-
-        public override bool Use(Vector3Int target)
-        {
-            return true;
-        }
-
-        public override bool NeedTarget()
-        {
-            return false;
-        }
     }
 }

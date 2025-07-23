@@ -92,7 +92,6 @@ namespace HappyHarvest
             //prefab already in the scene and can sometime tuck it under other object in the hierarchy)
             gameObject.transform.SetParent(null);
 
-            GameManager.Instance.Player = this;
             DontDestroyOnLoad(gameObject);
 
             // Get references to Pathfinding and TileInteractionManager
@@ -256,7 +255,8 @@ namespace HappyHarvest
                 return;
             }
 
-            if (m_Inventory.EquippedItem != null && m_Inventory.EquippedItem.NeedTarget() && !m_HasTarget) return;
+            if (m_Inventory.EquippedItem != null && !m_HasTarget)
+                return;
 
             UseItem();
         }
