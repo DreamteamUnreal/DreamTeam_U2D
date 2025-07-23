@@ -1,4 +1,4 @@
-using System.Collections;
+//Storage.cs
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,14 +6,14 @@ namespace HappyHarvest
 {
     public class Storage
     {
-        public List<InventorySystem.InventoryEntry> Content { get; private set; }
+        public List<InventorySlot> Content { get; private set; }
 
         public Storage()
         {
-            Content = new List<InventorySystem.InventoryEntry>();
+            Content = new List<InventorySlot>();
         }
 
-        public void Store(InventorySystem.InventoryEntry entry)
+        public void Store(InventorySlot entry)
         {
             //we won't have thousands of objects types stored, so there should be no performance problem on simply searching
             //for the key. But as usual : profile. If profiling show this to be massively underperformant, switch over to a
@@ -22,14 +22,6 @@ namespace HappyHarvest
             if (idx != -1)
             {
                 Content[idx].StackSize += entry.StackSize;
-            }
-            else
-            {
-                Content.Add(new InventorySystem.InventoryEntry()
-                {
-                    Item = entry.Item,
-                    StackSize = entry.StackSize
-                });
             }
         }
 

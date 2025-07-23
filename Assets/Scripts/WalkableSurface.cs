@@ -1,6 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+//WackableSurface.cs
 using UnityEngine;
 using UnityEngine.Tilemaps;
 

@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+//SpawnPoint.cs
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -28,13 +27,6 @@ namespace HappyHarvest
             var playerTransform = GameManager.Instance.Player.transform;
             
             playerTransform.position = transform.position;
-
-            if (GameManager.Instance.MainCamera != null)
-            {//some scene, like interior, may have fixed camera, so no need to change anything
-                GameManager.Instance.MainCamera.Follow = playerTransform;
-                GameManager.Instance.MainCamera.LookAt = playerTransform;
-                GameManager.Instance.MainCamera.ForceCameraPosition(playerTransform.position, Quaternion.identity);
-            }
         }
     }
 

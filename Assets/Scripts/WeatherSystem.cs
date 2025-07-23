@@ -1,5 +1,5 @@
+//WeatherSystem.cs
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -13,11 +13,15 @@ namespace HappyHarvest
     public class WeatherSystem : MonoBehaviour
     {
         [Flags]
-        public enum WeatherType
+        public enum WeatherType { Sun, Rain, Thunder }
+        public WeatherType CurrentWeather = WeatherType.Sun;
+
+        public void ChangeWeather(WeatherType newWeather)
         {
-            Sun = 0x1,
-            Rain = 0x2,
-            Thunder = 0x4
+            CurrentWeather = newWeather;
+            Debug.Log($"Weather changed to: {CurrentWeather}");
+            SwitchAllElementsToCurrentWeather();
+            UIHandler.UpdateWeatherIcons(newWeather);
         }
 
         public WeatherType StartingWeather;
@@ -25,15 +29,10 @@ namespace HappyHarvest
         private WeatherType m_CurrentWeatherType;
         private List<WeatherSystemElement> m_Elements = new List<WeatherSystemElement>();
 
-        private void Awake()
-        {
-            GameManager.Instance.WeatherSystem = this;
-        }
-
-        void Start()
+		void Start()
         {
             FindAllElements();
-            ChangeWeather(StartingWeather);
+            //ChangeWeather(StartingWeather);
         }
 
         public static void UnregisterElement(WeatherSystemElement element)
@@ -56,13 +55,6 @@ namespace HappyHarvest
 #if UNITY_EDITOR
             }
 #endif
-        }
-
-        public void ChangeWeather(WeatherType newType)
-        {
-            m_CurrentWeatherType = newType;
-            SwitchAllElementsToCurrentWeather();
-            UIHandler.UpdateWeatherIcons(newType);
         }
 
         void FindAllElements()
@@ -108,5 +100,4 @@ namespace HappyHarvest
         }
     }
 #endif
-
 }

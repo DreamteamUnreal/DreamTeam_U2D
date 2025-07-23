@@ -9,12 +9,16 @@ namespace HappyHarvest
     /// </summary>
     // You can add a CreateAssetMenu attribute here if you want to create generic Item assets directly
     // [CreateAssetMenu(fileName = "NewBaseItem", menuName = "HappyHarvest/Items/Base Item")]
-    public class Item : ScriptableObject
+    public class Item : ScriptableObject, IDatabaseEntry
     {
         [Tooltip("A unique identifier for this item. MUST BE UNIQUE. Used for saving/loading and lookup.")]
         public string ItemID;
+        // --- Implement the IDatabaseEntry.ID property ---
+        public string ID => ItemID; // IDatabaseEntry.ID now returns the ItemID
 
-        [Tooltip("The name displayed in UI.")]
+		public string Key => throw new System.NotImplementedException();
+
+		[Tooltip("The name displayed in UI.")]
         public string DisplayName;
 
         [Tooltip("The sprite used for inventory icons and UI display.")]

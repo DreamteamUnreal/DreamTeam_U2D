@@ -1,3 +1,4 @@
+//TerrainManager.cs
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -225,8 +226,6 @@ namespace HappyHarvest
 
         private void Awake()
         {
-            GameManager.Instance.Terrain = this;
-
             for (int i = 0; i < 4; ++i)
             {
                 var effect = Instantiate(TillingEffectPrefab);

@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
+//WerehouseUI.cs
 using Template2DCommon;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace HappyHarvest
@@ -77,7 +75,6 @@ namespace HappyHarvest
                 var i1 = i;
                 button.clicked += () =>
                 {
-                    GameManager.Instance.Storage.Store(invEntry);
                     player.Inventory.Remove(i1, invEntry.StackSize);
                     m_Scrollview.contentContainer.Remove(entry);
                 };
@@ -98,76 +95,7 @@ namespace HappyHarvest
             
             m_Scrollview.contentContainer.Clear();
 
-            var storage = GameManager.Instance.Storage;
             var inventory = GameManager.Instance.Player.Inventory;
-            
-            for (var i = 0; i < storage.Content.Count; ++i)
-            {
-                var entry = storage.Content[i];
-                
-                //we keep empty stack in the storage to avoid modifying the list too often, but we don't need to show
-                //them to the retrieve UI as we cannot retrieve 0 thing
-                if(entry.StackSize == 0)
-                    continue;
-                
-                var retrieveEntry = m_EntryTemplate.CloneTree();
-                retrieveEntry.userData = entry.Item;
-                
-                var itemLabel = retrieveEntry.Q<Label>("ItemName"); 
-                itemLabel.text = entry.Item.DisplayName + $"(x{entry.StackSize})";
-                retrieveEntry.Q<VisualElement>("ItemIcone").style.backgroundImage = new StyleBackground(entry.Item.ItemSprite);
-                
-                var button = retrieveEntry.Q<Button>("ActionButton");
-                var i1 = i;
-                button.clicked += () =>
-                {
-                    var retrieveAmount = Mathf.Min(entry.StackSize, entry.Item.MaxStackSize);
-                    var existing = inventory.GetIndexOfItem(entry.Item, true);
-                    if (existing != -1)
-                    {//we have a non empty stack, so fill that one first
-                        retrieveAmount -= inventory.Entries[existing].StackSize;
-                    }
-
-                    if (retrieveAmount > 0)
-                    {
-                        GameManager.Instance.Storage.Retrieve(i1, retrieveAmount);
-                        inventory.AddItem(entry.Item, retrieveAmount);
-                        
-                        if (GameManager.Instance.Storage.Content[i1].StackSize == 0)
-                        {
-                            m_Scrollview.Remove(retrieveEntry);
-                        }
-                        else
-                        {
-                            itemLabel.text = entry.Item.DisplayName + $"(x{entry.StackSize})";
-                        }
-                        
-                        //update all remaining entry (disable retrieve button if inventory full, update count)
-                        foreach (var child in m_Scrollview.contentContainer.Children())
-                        {
-                            var entryItem = child.userData as Item;
-                            var entryButton = child.Q<Button>("ActionButton");
-
-                            if (inventory.GetMaximumAmountFit(entryItem) == 0)
-                            {
-                                entryButton.text = "Inventory Full";
-                                entryButton.SetEnabled(false);
-                            }
-                        }
-                    }
-                };
-
-                button.text = "Retrieve";
-
-                //if we cannot fit even 1 of those item, the retrieve button is disabled
-                if (!inventory.CanFitItem(entry.Item, 1))
-                {
-                    button.text = "Inventory Full";
-                    button.SetEnabled(false);
-                }
-                
-                m_Scrollview.Add(retrieveEntry);
-            }
         }
     }
 }

@@ -1,3 +1,4 @@
+//Crops.cs
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.VFX;
@@ -12,7 +13,9 @@ namespace HappyHarvest
     {
         public string Key => UniqueID;
 
-        public string UniqueID = "";
+		public string ID => throw new System.NotImplementedException();
+
+		public string UniqueID = "";
         
         public TileBase[] GrowthStagesTiles;
 

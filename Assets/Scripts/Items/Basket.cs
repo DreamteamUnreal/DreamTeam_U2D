@@ -8,12 +8,6 @@ namespace HappyHarvest
         public override bool CanUse(Vector3Int target)
         {
             var data = GameManager.Instance.Terrain.GetCropDataAt(target);
-            return data != null && data.GrowingCrop != null && Mathf.Approximately(data.GrowthRatio, 1.0f);
-        }
-
-        public override bool Use(Vector3Int target)
-        {
-            var data = GameManager.Instance.Terrain.GetCropDataAt(target);
             if (!GameManager.Instance.Player.CanFitInInventory(data.GrowingCrop.Produce,
                     data.GrowingCrop.ProductPerHarvest))
                 return false;
@@ -28,8 +22,7 @@ namespace HappyHarvest
                 }
                 return true;
             }
-
-            return false;
+            return data != null && data.GrowingCrop != null && Mathf.Approximately(data.GrowthRatio, 1.0f);
         }
     }
 }

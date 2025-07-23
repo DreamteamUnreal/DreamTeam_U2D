@@ -1,4 +1,4 @@
-// CraftingStation.cs
+//CraftingStation.cs
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,12 +28,6 @@ namespace HappyHarvest
             if (RecipeToCraft != null)
             {
                 Debug.Log($"Attempting to craft {RecipeToCraft.RecipeName} at {gameObject.name}...");
-                bool success = GameManager.Instance.Player.craftingManager.Craft(RecipeToCraft);
-                if (!success)
-                {
-                    Debug.Log("Crafting failed! Check ingredients or inventory space.");
-                    // Optionally show a UI message to the player
-                }
             }
             // --- More Complex: Open a Crafting UI ---
             // If you have a UI that shows multiple recipes, you'd do something like:
@@ -42,15 +36,6 @@ namespace HappyHarvest
             else if (MultipleRecipes != null && MultipleRecipes.Count > 0)
             {
                 Debug.Log("CraftingStation: This station supports multiple recipes. Implement UI to select one.");
-                // For demonstration, let's just try to craft the first one if multiple are set
-                if (GameManager.Instance.Player.craftingManager.Craft(MultipleRecipes[0]))
-                {
-                    Debug.Log($"Successfully crafted {MultipleRecipes[0].RecipeName} (first in list)!");
-                }
-                else
-                {
-                    Debug.Log($"Failed to craft {MultipleRecipes[0].RecipeName} (first in list).");
-                }
             }
             else
             {

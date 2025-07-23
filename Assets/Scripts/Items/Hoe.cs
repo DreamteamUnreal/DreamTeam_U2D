@@ -9,11 +9,5 @@ namespace HappyHarvest
         {
             return GameManager.Instance?.Terrain != null && GameManager.Instance.Terrain.IsTillable(target);
         }
-
-        public override bool Use(Vector3Int target)
-        {
-            GameManager.Instance.Terrain.TillAt(target);
-            return true;
-        }
     }
 }
