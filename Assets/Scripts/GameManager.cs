@@ -1,269 +1,200 @@
-//GameManager.cs
-using System.Collections.Generic;
-using Unity.Cinemachine;
+// GameManager.cs
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.Tilemaps;
+using System.Collections.Generic; // For List if needed, and Item[] for MarketEntries
 
 namespace HappyHarvest
 {
     /// <summary>
-    /// The GameManager is the entry point to all the game system. It's execution order is set very low to make sure
-    /// its Awake function is called as early as possible so the instance if valid on other Scripts. 
+    /// The central singleton manager for the HappyHarvest game.
+    /// It provides global access to key game systems and manages their lifecycle.
     /// </summary>
-    [DefaultExecutionOrder(-9999)]
     public class GameManager : MonoBehaviour
     {
-        private static GameManager s_Instance;
-        
-        
-#if UNITY_EDITOR
-        //As our manager run first, it will also be destroyed first when the app will be exiting, which lead to s_Instance
-        //to become null and so will trigger another instantiate in edit mode (as we dynamically instantiate the Manager)
-        //so this is set to true when destroyed, so we do not reinstantiate a new one
-        private static bool s_IsQuitting = false;
-#endif
-        public static GameManager Instance 
+        // Singleton Instance: Provides global access to the GameManager.
+        // It is privately set only within its own Awake method.
+        public static GameManager Instance { get; private set; }
+
+        // --- References to other Game Systems ---
+        // These properties allow other scripts to easily access major game components
+        // via GameManager.Instance.PropertyName. They are set in Awake.
+
+        public PlayerController Player { get; private set; }
+        public PieScoreManager PieScoreManager { get; private set; }
+        public DayCycleHandler DayCycleHandler { get; private set; }
+        public ItemManager ItemManager { get; private set; }
+        public TerrainManager Terrain { get; private set; } // Assuming you have a TerrainManager for grid/tilemap access
+        public WeatherSystem WeatherSystem { get; private set; } // For weather control
+
+        [Header("Market Settings")]
+        [Tooltip("List of items available for purchase in the market.")]
+        public Item[] MarketEntries; // Assign your buyable Item ScriptableObjects here
+
+        // Public property to expose the current day ratio (0.0 to 1.0)
+        // This would typically be managed by DayCycleHandler and exposed through a method or property.
+        // For simplicity, let's assume DayCycleHandler updates this or GameManager manages it.
+        // If DayCycleHandler has a public float CurrentRatio, you can remove this.
+        [Tooltip("The current progress of the day (0.0 = start of day, 1.0 = end of day).")]
+        public float CurrentDayRatio = 0.0f; // This should ideally be driven by DayCycleHandler
+
+		[System.Obsolete]
+		void Awake()
         {
-            get
+            // --- Singleton Initialization ---
+            // Ensures only one instance of GameManager exists across scenes.
+            if (Instance != null && Instance != this)
             {
-#if UNITY_EDITOR
-                if (!Application.isPlaying || s_IsQuitting)
-                    return null;
-                
-                if (s_Instance == null)
-                {
-                    //in editor, we can start any scene to test, so we are not sure the game manager will have been
-                    //created by the first scene starting the game. So we load it manually. This check is useless in
-                    //player build as the 1st scene will have created the GameManager so it will always exists.
-                    Instantiate(Resources.Load<GameManager>("GameManager"));
-                }
-#endif
-                return s_Instance;
+                Destroy(gameObject); // Destroy duplicate instances
+                return;
             }
-        }
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // Keep GameManager alive between scene loads
 
-        public TerrainManager Terrain { get; set; }
-        public PlayerController Player { get; set; }
-        public DayCycleHandler DayCycleHandler { get; set; }
-        public WeatherSystem WeatherSystem { get; set; }
-        public CinemachineCamera MainCamera { get; set; }
-        public Tilemap WalkSurfaceTilemap { get; set; }
-        
-        public SceneData LoadedSceneData { get; set; }
-        
-        // Will return the ratio of time for the current day between 0 (00:00) and 1 (23:59).
-        public float CurrentDayRatio => m_CurrentTimeOfTheDay / DayDurationInSeconds;
+            // --- Find and Assign Sub-Managers/Systems ---
+            // GameManager takes responsibility for finding and linking its sub-systems.
+            // This relies on these sub-systems being present in the scene and having their Awake methods run.
+            // Ensure Script Execution Order is set correctly for these dependencies.
 
-        [Header("Market")] 
-        public Item[] MarketEntries;
-        
-        [Header("Time settings")]
-        [Min(1.0f)] 
-        public float DayDurationInSeconds;
-        public float StartingTime = 0.0f;
-
-        [Header("Data")] 
-        public ItemDatabase ItemDatabase;
-        public CropDatabase CropDatabase;
-
-        public Storage Storage;
-
-        private bool m_IsTicking;
-        
-        private List<DayEventHandler> m_EventHandlers = new();
-        private List<SpawnPoint> m_ActiveTransitions = new List<SpawnPoint>();
-        
-        private float m_CurrentTimeOfTheDay;
-
-        private void Awake()
-        {
-            s_Instance = this;
-            DontDestroyOnLoad(gameObject);
-
-            m_IsTicking = true;
-
-            ItemDatabase.Init();
-            CropDatabase.Init();
-
-            Storage = new Storage();
-
-            m_CurrentTimeOfTheDay = StartingTime;
-
-            //we need to ensure that we don't have a day length at 0, otherwise we will get stuck into infinite loop in update
-            //(and a day with 0 length makes no sense)
-            if (DayDurationInSeconds <= 0.0f)
+            // ItemManager: Essential for loading items by ID (used by InventorySystem)
+            ItemManager = FindObjectOfType<ItemManager>();
+            if (ItemManager == null)
             {
-                DayDurationInSeconds = 1.0f;
-                Debug.LogError("The day length on the GameManager is set to 0, the length need to be set to a positive value");
+                Debug.LogError("GameManager: ItemManager not found in the scene! Item loading will likely fail. " +
+                "Please ensure an 'ItemManager' GameObject with the 'ItemManager.cs' script is in your scene.");
             }
-        }
 
-        private void Start()
-        {
-            m_CurrentTimeOfTheDay = StartingTime;
-            
-            UIHandler.SceneLoaded();
-        }
-
-#if UNITY_EDITOR
-        private void OnDestroy()
-        {
-            s_IsQuitting = true;
-        }
-#endif
-
-        private void Update()
-        {
-            if (m_IsTicking)
+            // PlayerController: The main player character script
+            Player = FindObjectOfType<PlayerController>();
+            if (Player == null)
             {
-                float previousRatio = CurrentDayRatio;
-                m_CurrentTimeOfTheDay += Time.deltaTime;
-
-                while (m_CurrentTimeOfTheDay > DayDurationInSeconds)
-                    m_CurrentTimeOfTheDay -= DayDurationInSeconds;
-
-                foreach (var handler in m_EventHandlers)
-                {
-                    foreach (var evt in handler.Events)
-                    {
-                        bool prev = evt.IsInRange(previousRatio);
-                        bool current = evt.IsInRange(CurrentDayRatio);
-                    
-                        if (prev && !current)
-                        {
-                            evt.OffEvent.Invoke();
-                        }
-                        else if (!prev && current)
-                        {
-                            evt.OnEvents.Invoke();
-                        }
-                    }
-                }
-                
-                if(DayCycleHandler != null)
-                    DayCycleHandler.Tick();
+                Debug.LogWarning("GameManager: PlayerController not found in scene. Player-related functions may not work. " +
+                "Ensure your Player GameObject has 'PlayerController.cs' and is in the scene.");
             }
-        }
 
-        public void Pause()
-        {
-            m_IsTicking = false;
-            Player.ToggleControl(false);
-        }
-
-        public void Resume()
-        {
-            m_IsTicking = true;
-            Player.ToggleControl(true);
-        }
-
-        public void RegisterSpawn(SpawnPoint spawn)
-        {
-            if (Player == null && spawn.SpawnIndex == 0)
-            { //if we have no player, we need to create one
-                Instantiate(Resources.Load<PlayerController>("Character"));
-                spawn.SpawnHere();
-            }
-            
-            m_ActiveTransitions.Add(spawn);
-        }
-
-        public void UnregisterSpawn(SpawnPoint spawn)
-        {
-            m_ActiveTransitions.Remove(spawn);
-        }
-
-        public void MoveTo(int targetScene, int targetSpawn)
-        {
-            Pause();
-            SaveSystem.SaveSceneData();
-            UIHandler.FadeToBlack(() =>
+            // PieScoreManager: Manages game scoring and rounds
+            PieScoreManager = FindObjectOfType<PieScoreManager>();
+            if (PieScoreManager == null)
             {
-                var asyncop = SceneManager.LoadSceneAsync(targetScene, LoadSceneMode.Single);
-                asyncop.completed += operation =>
-                {
-                    m_IsTicking = true;
-                    
-                    foreach (var active in m_ActiveTransitions)
-                    {
-                        if (active.SpawnIndex == targetSpawn)
-                        {
-                            active.SpawnHere();
-                            SaveSystem.LoadSceneData();
-                        }
-                    }
-                    
-                    UIHandler.SceneLoaded();
-                    UIHandler.FadeFromBlack(() =>
-                    {
-                        Player.ToggleControl(true);
-                    });
-                };
-            });
+                Debug.LogWarning("GameManager: PieScoreManager not found in scene. Scoring functions may not work. " +
+                "Ensure a 'PieScoreManager' GameObject with the 'PieScoreManager.cs' script is in your scene.");
+            }
 
-            
+            // DayCycleHandler: Manages day/night cycle and lighting
+            DayCycleHandler = FindObjectOfType<DayCycleHandler>();
+            if (DayCycleHandler == null)
+            {
+                Debug.LogWarning("GameManager: DayCycleHandler not found in scene. Day/Night cycle will not function. " +
+                "Ensure a 'DayCycleHandler' GameObject with the 'DayCycleHandler.cs' script is in your scene.");
+            }
+
+			// TerrainManager: Manages grid, tilemaps, and terrain interactions
+#pragma warning disable CS0618 // Type or member is obsolete
+			Terrain = FindObjectOfType<TerrainManager>();
+#pragma warning restore CS0618 // Type or member is obsolete
+			if (Terrain == null)
+            {
+                Debug.LogWarning("GameManager: TerrainManager not found in scene. Terrain interactions (e.g., planting) may not work. " +
+                "Ensure a 'TerrainManager' GameObject with the 'TerrainManager.cs' script is in your scene.");
+            }
+
+			// WeatherSystem: Manages weather effects
+#pragma warning disable CS0618 // Type or member is obsolete
+			WeatherSystem = FindObjectOfType<WeatherSystem>();
+#pragma warning restore CS0618 // Type or member is obsolete
+			if (WeatherSystem == null)
+            {
+                Debug.LogWarning("GameManager: WeatherSystem not found in scene. Weather control will not function. " +
+                "Ensure a 'WeatherSystem' GameObject with the 'WeatherSystem.cs' script is in your scene.");
+            }
+
+            Debug.Log("GameManager Initialized.");
         }
-        
+
+        void Update()
+        {
+            // Example: Advance day cycle based on time (if DayCycleHandler isn't doing it directly)
+            // This assumes a simple time progression. Your DayCycleHandler.Tick() is called by GameManager.
+            // So, you need a mechanism to advance CurrentDayRatio.
+            // For example, if a day lasts 60 seconds:
+            // CurrentDayRatio = (Time.time / 60.0f) % 1.0f;
+            // DayCycleHandler?.Tick(); // Call the DayCycleHandler's tick
+        }
+
         /// <summary>
-        /// Will return the current time as a string in format of "xx:xx" 
+        /// Provides the current game time as a formatted string (e.g., "08:30 AM").
+        /// This would typically get the time from DayCycleHandler or an internal time system.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Formatted time string.</returns>
         public string CurrentTimeAsString()
         {
-            return GetTimeAsString(CurrentDayRatio);
+            // This is a placeholder. You'd get the actual time from your DayCycleHandler
+            // or a dedicated TimeSystem.
+            // Example: if DayCycleHandler has a public float CurrentTimeRatio;
+            // float totalMinutesInDay = 24 * 60;
+            // int currentMinutes = Mathf.FloorToInt(CurrentDayRatio * totalMinutesInDay);
+            // int hours = currentMinutes / 60;
+            // int minutes = currentMinutes % 60;
+            // return $"{hours:00}:{minutes:00}";
+
+            // For now, return a static string or link to DayCycleHandler's actual time if it has one
+            if (DayCycleHandler != null)
+            {
+                // Assuming DayCycleHandler has a way to give the current time ratio or formatted time
+                // For example, if DayCycleHandler.Tick() updates CurrentDayRatio, you can use that.
+                // Or if DayCycleHandler has a public string GetFormattedTime() method.
+                // For now, let's use a simple conversion of CurrentDayRatio
+                float totalHours = 24.0f;
+                int hours = Mathf.FloorToInt(CurrentDayRatio * totalHours);
+                int minutes = Mathf.FloorToInt((CurrentDayRatio * totalHours * 60) % 60);
+                return $"{hours:00}:{minutes:00}";
+            }
+            return "00:00"; // Default if DayCycleHandler is not available
         }
 
         /// <summary>
-        /// Return in the format "xx:xx" the given ration (between 0 and 1) of time
+        /// Helper to get formatted time string for UI elements (e.g. for DayCycleEditor)
         /// </summary>
-        /// <param name="ratio"></param>
-        /// <returns></returns>
+        /// <param name="ratio">The time ratio (0-1) to convert.</param>
+        /// <returns>Formatted time string (e.g., "06:00 AM").</returns>
         public static string GetTimeAsString(float ratio)
         {
-            var hour = GetHourFromRatio(ratio);
-            var minute = GetMinuteFromRatio(ratio);
+            float totalHours = 24.0f;
+            int hours = Mathf.FloorToInt(ratio * totalHours);
+            int minutes = Mathf.FloorToInt((ratio * totalHours * 60) % 60);
 
-            return $"{hour}:{minute:00}";
-        }
-
-        
-        public static int GetHourFromRatio(float ratio)
-        {
-            var time = ratio * 24.0f;
-            var hour = Mathf.FloorToInt(time);
-
-            return hour;
-        }
-
-        public static int GetMinuteFromRatio(float ratio)
-        {
-            var time = ratio * 24.0f;
-            var minute = Mathf.FloorToInt((time - Mathf.FloorToInt(time)) * 60.0f);
-
-            return minute;
-        }
-        
-        public static void RegisterEventHandler(DayEventHandler handler)
-        {
-            foreach (var evt in handler.Events)
+            string amPm = "AM";
+            if (hours >= 12)
             {
-                if (evt.IsInRange(GameManager.Instance.CurrentDayRatio))
-                {
-                    evt.OnEvents.Invoke();
-                }
-                else
-                {
-                    evt.OffEvent.Invoke();
-                }
+                amPm = "PM";
+                if (hours > 12) hours -= 12;
             }
-            
-            Instance.m_EventHandlers.Add(handler);
+            if (hours == 0) hours = 12; // 00:xx becomes 12:xx AM
+
+            return $"{hours:00}:{minutes:00} {amPm}";
         }
 
-        public static void RemoveEventHandler(DayEventHandler handler)
+
+        /// <summary>
+        /// Pauses the game by setting Time.timeScale to 0.
+        /// </summary>
+        public void Pause()
         {
-            Instance?.m_EventHandlers.Remove(handler);
+            Time.timeScale = 0;
+            Debug.Log("Game Paused");
         }
+
+        /// <summary>
+        /// Resumes the game by setting Time.timeScale to 1.
+        /// </summary>
+        public void Resume()
+        {
+            Time.timeScale = 1;
+            Debug.Log("Game Resumed");
+        }
+
+        // You might add methods here for:
+        // - Scene loading/unloading
+        // - Game state management (e.g., game over, main menu, gameplay)
+        // - Global event dispatching
+        // - Saving/Loading game progress (orchestrating SaveSystem)
     }
 }

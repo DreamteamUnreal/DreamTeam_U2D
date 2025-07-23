@@ -1,34 +1,57 @@
+// Item.cs
 using UnityEngine;
 
 namespace HappyHarvest
 {
-    public abstract class Item : ScriptableObject, IDatabaseEntry
+    /// <summary>
+    /// Base ScriptableObject for all items in the HappyHarvest game.
+    /// Derived classes (e.g., Tool, Consumable, Seed, Product) will inherit from this.
+    /// </summary>
+    // You can add a CreateAssetMenu attribute here if you want to create generic Item assets directly
+    // [CreateAssetMenu(fileName = "NewBaseItem", menuName = "HappyHarvest/Items/Base Item")]
+    public class Item : ScriptableObject
     {
-        public string Key => UniqueID;
+        [Tooltip("A unique identifier for this item. MUST BE UNIQUE. Used for saving/loading and lookup.")]
+        public string ItemID;
 
-        [Tooltip("Name used in the database for that Item, used by save system")]
-        public string UniqueID = "DefaultID";
-        
+        [Tooltip("The name displayed in UI.")]
         public string DisplayName;
+
+        [Tooltip("The sprite used for inventory icons and UI display.")]
         public Sprite ItemSprite;
-        public int MaxStackSize = 10;
-        public bool Consumable = true;
-        public int BuyPrice = -1;
 
-        [Tooltip("Prefab that will be instantiated in the player hand when this is equipped")]
+        [Tooltip("The prefab instantiated when this item is equipped by the player (e.g., axe model).")]
         public GameObject VisualPrefab;
-        public string PlayerAnimatorTriggerUse = "GenericToolSwing";
-        
-        [Tooltip("Sound triggered when using the item")]
-        public AudioClip[] UseSound;
 
-        public abstract bool CanUse(Vector3Int target);
-        public abstract bool Use(Vector3Int target);
+        [Tooltip("The name of the animator trigger on the player for using this item (e.g., 'UseAxe').")]
+        public string PlayerAnimatorTriggerUse;
 
-        //override this for item that does not need a target (like Product, they can be eaten anytime)
-        public virtual bool NeedTarget()
+        [Tooltip("The price to buy this item from a shop.")]
+        public int BuyPrice;
+
+        [Tooltip("The maximum number of this item that can stack in one inventory slot.")]
+        [Min(1)] // Minimum stack size is 1
+        public int MaxStackSize = 99; // Default max stack size for most items
+
+        /// <summary>
+        /// Virtual method to check if this item can be used at a specific target cell.
+        /// Override in derived classes (e.g., Tool, Seed) for specific logic.
+        /// </summary>
+        /// <param name="targetCell">The grid cell being targeted.</param>
+        /// <returns>True if the item can be used, false otherwise.</returns>
+        public virtual bool CanUse(Vector3Int targetCell)
         {
-            return true;
+            // By default, a base item cannot be used on a cell
+            return false;
+        }
+
+        /// <summary>
+        /// Virtual method for general item usage (e.g., consuming a food item).
+        /// Override in derived classes (e.g., Consumable).
+        /// </summary>
+        public virtual void Use()
+        {
+            Debug.Log($"Used generic item: {DisplayName}");
         }
     }
 }
