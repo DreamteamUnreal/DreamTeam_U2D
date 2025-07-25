@@ -1,46 +1,43 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace HappyHarvest
 {
-    public class TargetMarker : MonoBehaviour
-    {
-        
-        [SerializeField]
-        private Color _activeColor = Color.white;
-        [SerializeField]
-        private Color _inactiveColor = Color.gray;
+	public class TargetMarker : MonoBehaviour
+	{
 
-        private SpriteRenderer _renderer;
+		[SerializeField]
+		private Color _activeColor = Color.white;
+		[SerializeField]
+		private Color _inactiveColor = Color.gray;
 
-        private void Awake()
-        {
-            _renderer = GetComponent<SpriteRenderer>();
-        }
+		private SpriteRenderer _renderer;
 
-        // Start is called before the first frame update
-        public void Activate()
-        {
-            Show();
-            _renderer.color = _activeColor;
-        }
+		private void Awake()
+		{
+			_renderer = GetComponent<SpriteRenderer>();
+		}
 
-        public void Deactivate()
-        {
-            Show();
-            _renderer.color = _inactiveColor;
-        }
+		// Start is called before the first frame update
+		public void Activate()
+		{
+			Show();
+			_renderer.color = _activeColor;
+		}
 
-        public void Hide()
-        {
-            gameObject.SetActive(false);
-        }
+		public void Deactivate()
+		{
+			Show();
+			_renderer.color = _inactiveColor;
+		}
 
-        public void Show()
-        {
-            gameObject.SetActive(true);
-        }
-}
+		public void Hide()
+		{
+			gameObject.SetActive(false);
+		}
+
+		public void Show()
+		{
+			gameObject.SetActive(true);
+		}
+	}
 }

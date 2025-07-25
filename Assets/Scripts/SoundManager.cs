@@ -7,98 +7,98 @@ using UnityEngine.Audio;
 
 namespace Template2DCommon
 {
-    public class SoundManager : MonoBehaviour
-    {
-        public static SoundManager Instance { get; protected set; }
-    
-        [Serializable]
-        public class SoundData
-        {
-            public float MainVolume = 1.0f;
-            public float BGMVolume = 1.0f;
-            public float SFXVolume = 1.0f;
-        }
+	public class SoundManager : MonoBehaviour
+	{
+		public static SoundManager Instance { get; protected set; }
 
-        public AudioMixer Mixer;
-        public AudioSource UISource;
-        public AudioSource SFXReferenceSource;
+		[Serializable]
+		public class SoundData
+		{
+			public float MainVolume = 1.0f;
+			public float BGMVolume = 1.0f;
+			public float SFXVolume = 1.0f;
+		}
 
-        public SoundData Sound { get; protected set; } = new();
-    
-        private Queue<AudioSource> m_SFXPool;
+		public AudioMixer Mixer;
+		public AudioSource UISource;
+		public AudioSource SFXReferenceSource;
 
-        private void Awake()
-        {
-            Instance = this;
-        
-            const int PoolLength = 16;
+		public SoundData Sound { get; protected set; } = new();
 
-            m_SFXPool = new Queue<AudioSource>();
-        
-            for (int i = 0; i < PoolLength; ++i)
-            {
-                GameObject obj = new GameObject("SFXPool");
-                obj.transform.SetParent(transform);
+		private Queue<AudioSource> m_SFXPool;
 
-                var source = Instantiate(SFXReferenceSource);
+		private void Awake()
+		{
+			Instance = this;
 
-                m_SFXPool.Enqueue(source);
-            }
-        }
+			const int PoolLength = 16;
 
-        private void Start()
-        {
-            Load();
-            UpdateVolume();
-        }
+			m_SFXPool = new Queue<AudioSource>();
 
-        public void UpdateVolume()
-        {
-            Mixer.SetFloat("MainVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.MainVolume)) * 30.0f);
-            Mixer.SetFloat("SFXVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.SFXVolume)) * 30.0f);
-            Mixer.SetFloat("BGMVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.BGMVolume)) * 30.0f);
-        }
+			for (int i = 0; i < PoolLength; ++i)
+			{
+				GameObject obj = new("SFXPool");
+				obj.transform.SetParent(transform);
 
-        public void PlaySFXAt(Vector3 position, AudioClip clip, bool spatialized)
-        {
-            var source = m_SFXPool.Dequeue();
+				AudioSource source = Instantiate(SFXReferenceSource);
 
-            source.clip = clip;
-            source.transform.position = position;
+				m_SFXPool.Enqueue(source);
+			}
+		}
 
-            source.spatialBlend = spatialized ? 1.0f : 0.0f;
-        
-            source.Play();
-        
-            m_SFXPool.Enqueue(source);
-        }
+		private void Start()
+		{
+			Load();
+			UpdateVolume();
+		}
 
-        public void PlayUISound()
-        {
-            UISource.Play();
-        }
+		public void UpdateVolume()
+		{
+			_ = Mixer.SetFloat("MainVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.MainVolume)) * 30.0f);
+			_ = Mixer.SetFloat("SFXVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.SFXVolume)) * 30.0f);
+			_ = Mixer.SetFloat("BGMVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.BGMVolume)) * 30.0f);
+		}
 
-        public void Save()
-        {
-            var file = Application.persistentDataPath + "/sound_settings.json";
-            File.WriteAllText(file, JsonUtility.ToJson(Sound));
-        }
+		public void PlaySFXAt(Vector3 position, AudioClip clip, bool spatialized)
+		{
+			AudioSource source = m_SFXPool.Dequeue();
 
-        public void Load()
-        {
-            var file = Application.persistentDataPath + "/sound_settings.json";
-            if (File.Exists(file))
-            {
-                JsonUtility.FromJsonOverwrite(File.ReadAllText(file), Sound);
-                UpdateVolume();
-            }
-            else
-            {
-                Sound.MainVolume = 1.0f;
-                Sound.BGMVolume = 1.0f;
-                Sound.SFXVolume = 1.0f;
-                UpdateVolume();
-            }
-        }
-    }
+			source.clip = clip;
+			source.transform.position = position;
+
+			source.spatialBlend = spatialized ? 1.0f : 0.0f;
+
+			source.Play();
+
+			m_SFXPool.Enqueue(source);
+		}
+
+		public void PlayUISound()
+		{
+			UISource.Play();
+		}
+
+		public void Save()
+		{
+			string file = Application.persistentDataPath + "/sound_settings.json";
+			File.WriteAllText(file, JsonUtility.ToJson(Sound));
+		}
+
+		public void Load()
+		{
+			string file = Application.persistentDataPath + "/sound_settings.json";
+			if (File.Exists(file))
+			{
+				JsonUtility.FromJsonOverwrite(File.ReadAllText(file), Sound);
+				UpdateVolume();
+			}
+			else
+			{
+				Sound.MainVolume = 1.0f;
+				Sound.BGMVolume = 1.0f;
+				Sound.SFXVolume = 1.0f;
+				UpdateVolume();
+			}
+		}
+	}
 }

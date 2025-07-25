@@ -342,7 +342,6 @@ namespace HappyHarvest
 
 			m_Coins += actualCount * product.SellPrice;
 			UIHandler.UpdateCoins(m_Coins);
-			UIHandler.PlayBuySellSound(transform.position);
 		}
 
 		public bool BuyItem(Item item)
@@ -354,7 +353,6 @@ namespace HappyHarvest
 
 			m_Coins -= item.BuyPrice;
 			UIHandler.UpdateCoins(m_Coins);
-			UIHandler.PlayBuySellSound(transform.position);
 			_ = AddItem(item);
 			return true;
 		}

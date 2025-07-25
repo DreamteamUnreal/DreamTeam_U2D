@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-using System;
-
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEditor.UIElements;
 #endif
 
 namespace HappyHarvest
@@ -39,8 +36,8 @@ namespace HappyHarvest
 		[Tooltip("The scale of the normal shadow length (0 to 1) along the day")]
 		public AnimationCurve ShadowLength;
 
-		private List<ShadowInstance> m_Shadows = new();
-		private List<LightInterpolator> m_LightBlenders = new();
+		private readonly List<ShadowInstance> m_Shadows = new();
+		private readonly List<LightInterpolator> m_LightBlenders = new();
 
 		private void Awake()
 		{
@@ -65,20 +62,50 @@ namespace HappyHarvest
 
 		public void UpdateLight(float ratio)
 		{
-			if (DayLight != null) DayLight.color = DayLightGradient.Evaluate(ratio);
-			else Debug.LogWarning("DayLight is not assigned in DayCycleHandler.");
+			if (DayLight != null)
+			{
+				DayLight.color = DayLightGradient.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("DayLight is not assigned in DayCycleHandler.");
+			}
 
-			if (NightLight != null) NightLight.color = NightLightGradient.Evaluate(ratio);
-			else Debug.LogWarning("NightLight is not assigned in DayCycleHandler.");
+			if (NightLight != null)
+			{
+				NightLight.color = NightLightGradient.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("NightLight is not assigned in DayCycleHandler.");
+			}
 
-			if (AmbientLight != null) AmbientLight.color = AmbientLightGradient.Evaluate(ratio);
-			else Debug.LogWarning("AmbientLight is not assigned in DayCycleHandler.");
+			if (AmbientLight != null)
+			{
+				AmbientLight.color = AmbientLightGradient.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("AmbientLight is not assigned in DayCycleHandler.");
+			}
 
-			if (SunRimLight != null) SunRimLight.color = SunRimLightGradient.Evaluate(ratio);
-			else Debug.LogWarning("SunRimLight is not assigned in DayCycleHandler.");
+			if (SunRimLight != null)
+			{
+				SunRimLight.color = SunRimLightGradient.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("SunRimLight is not assigned in DayCycleHandler.");
+			}
 
-			if (MoonRimLight != null) MoonRimLight.color = MoonRimLightGradient.Evaluate(ratio);
-			else Debug.LogWarning("MoonRimLight is not assigned in DayCycleHandler.");
+			if (MoonRimLight != null)
+			{
+				MoonRimLight.color = MoonRimLightGradient.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("MoonRimLight is not assigned in DayCycleHandler.");
+			}
 
 			if (LightsRoot != null)
 			{
@@ -92,24 +119,38 @@ namespace HappyHarvest
 			UpdateShadow(ratio);
 		}
 
-		void UpdateShadow(float ratio)
+		private void UpdateShadow(float ratio)
 		{
 			float currentShadowAngle = 0;
-			if (ShadowAngle != null) currentShadowAngle = ShadowAngle.Evaluate(ratio);
-			else Debug.LogWarning("ShadowAngle AnimationCurve is not assigned in DayCycleHandler.");
+			if (ShadowAngle != null)
+			{
+				currentShadowAngle = ShadowAngle.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("ShadowAngle AnimationCurve is not assigned in DayCycleHandler.");
+			}
 
 			float currentShadowLength = 0;
-			if (ShadowLength != null) currentShadowLength = ShadowLength.Evaluate(ratio);
-			else Debug.LogWarning("ShadowLength AnimationCurve is not assigned in DayCycleHandler.");
+			if (ShadowLength != null)
+			{
+				currentShadowLength = ShadowLength.Evaluate(ratio);
+			}
+			else
+			{
+				Debug.LogWarning("ShadowLength AnimationCurve is not assigned in DayCycleHandler.");
+			}
 
 			while (currentShadowAngle > 1.0f)
+			{
 				currentShadowAngle -= 1.0f;
+			}
 
-			foreach (var shadow in m_Shadows)
+			foreach (ShadowInstance shadow in m_Shadows)
 			{
 				if (shadow != null && shadow.transform != null)
 				{
-					var t = shadow.transform;
+					Transform t = shadow.transform;
 					t.eulerAngles = new Vector3(0, 0, currentShadowAngle * 360.0f);
 					t.localScale = new Vector3(1, 1f * shadow.BaseLength * currentShadowLength, 1);
 				}
@@ -160,7 +201,7 @@ namespace HappyHarvest
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				var instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
+				DayCycleHandler instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
 				if (instance != null) { instance.m_Shadows.Add(shadow); }
 				return;
 			}
@@ -180,7 +221,7 @@ namespace HappyHarvest
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				var instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
+				DayCycleHandler instance = GameObject.FindFirstObjectByType<DayCycleHandler>();
 				if (instance != null) { instance.m_Shadows.Remove(shadow); }
 				return;
 			}
@@ -200,7 +241,7 @@ namespace HappyHarvest
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				var instance = FindFirstObjectByType<DayCycleHandler>();
+				DayCycleHandler instance = FindFirstObjectByType<DayCycleHandler>();
 				if (instance != null) { instance.m_LightBlenders.Add(interpolator); }
 				return;
 			}
@@ -220,7 +261,7 @@ namespace HappyHarvest
 #if UNITY_EDITOR
 			if (!Application.isPlaying)
 			{
-				var instance = FindFirstObjectByType<DayCycleHandler>();
+				DayCycleHandler instance = FindFirstObjectByType<DayCycleHandler>();
 				if (instance != null) { instance.m_LightBlenders.Remove(interpolator); }
 				return;
 			}
@@ -235,7 +276,9 @@ namespace HappyHarvest
 			}
 		}
 	}
+#pragma warning disable IDE0060 // Remove unused parameter
 	public class LightInterpolator : MonoBehaviour { public void SetRatio(float ratio) { /* ... */ } /* ... */ }
+#pragma warning restore IDE0060 // Remove unused parameter
 	[System.Serializable]
 	public struct DayCycleHandlerSaveData
 	{

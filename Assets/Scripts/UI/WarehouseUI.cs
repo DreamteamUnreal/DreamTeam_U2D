@@ -4,98 +4,100 @@ using UnityEngine.UIElements;
 
 namespace HappyHarvest
 {
-    /// <summary>
-    /// Handle the WarehouseUI that handle storing/retrieving object.
-    /// </summary>
-    public class WarehouseUI
-    {
-        private VisualElement m_Root;
+	/// <summary>
+	/// Handle the WarehouseUI that handle storing/retrieving object.
+	/// </summary>
+	public class WarehouseUI
+	{
+		private readonly VisualElement m_Root;
 
-        private VisualTreeAsset m_EntryTemplate;
+		private readonly VisualTreeAsset m_EntryTemplate;
 
-        private Button m_StoreButton;
-        private Button m_RetrieveButton;
+		private readonly Button m_StoreButton;
+		private readonly Button m_RetrieveButton;
 
-        private ScrollView m_Scrollview;
+		private readonly ScrollView m_Scrollview;
 
-        public WarehouseUI(VisualElement root, VisualTreeAsset entryTemplate)
-        {
-            m_Root = root;
+		public WarehouseUI(VisualElement root, VisualTreeAsset entryTemplate)
+		{
+			m_Root = root;
 
-            m_EntryTemplate = entryTemplate;
+			m_EntryTemplate = entryTemplate;
 
-            m_StoreButton = m_Root.Q<Button>("StoreButton");
-            m_StoreButton.clicked += OpenStore;
+			m_StoreButton = m_Root.Q<Button>("StoreButton");
+			m_StoreButton.clicked += OpenStore;
 
-            m_RetrieveButton = m_Root.Q<Button>("RetrieveButton");
-            m_RetrieveButton.clicked += OpenRetrieve;
-            
-            m_Root.Q<Button>("CloseButton").clicked += Close;
+			m_RetrieveButton = m_Root.Q<Button>("RetrieveButton");
+			m_RetrieveButton.clicked += OpenRetrieve;
 
-            m_Scrollview = m_Root.Q<ScrollView>("ContentScrollView");
-        }
+			m_Root.Q<Button>("CloseButton").clicked += Close;
 
-        public void Open()
-        {
-            m_Root.visible = true;
-            GameManager.Instance.Pause();
-            SoundManager.Instance.PlayUISound();
-        }
+			m_Scrollview = m_Root.Q<ScrollView>("ContentScrollView");
+		}
 
-        public void Close()
-        {
-            m_Root.visible = false;
-            GameManager.Instance.Resume();
-        }
+		public void Open()
+		{
+			m_Root.visible = true;
+			GameManager.Instance.Pause();
+			SoundManager.Instance.PlayUISound();
+		}
 
-        void OpenStore()
-        {
-            m_StoreButton.AddToClassList("activeButton");
-            m_RetrieveButton.RemoveFromClassList("activeButton");
+		public void Close()
+		{
+			m_Root.visible = false;
+			GameManager.Instance.Resume();
+		}
 
-            m_StoreButton.SetEnabled(false);
-            m_RetrieveButton.SetEnabled(true);
+		private void OpenStore()
+		{
+			m_StoreButton.AddToClassList("activeButton");
+			m_RetrieveButton.RemoveFromClassList("activeButton");
 
-            m_Scrollview.contentContainer.Clear();
+			m_StoreButton.SetEnabled(false);
+			m_RetrieveButton.SetEnabled(true);
 
-            var player = GameManager.Instance.Player;
+			m_Scrollview.contentContainer.Clear();
 
-            for(var i = 0; i < player.Inventory.Entries.Length; ++i)
-            {
-                var invEntry = player.Inventory.Entries[i];
-                var item = invEntry.Item;
-                
-                if(item == null) continue;
+			PlayerController player = GameManager.Instance.Player;
 
-                var entry = m_EntryTemplate.CloneTree();
-                entry.Q<Label>("ItemName").text = item.DisplayName;
-                entry.Q<VisualElement>("ItemIcone").style.backgroundImage = new StyleBackground(item.ItemSprite);
-                
-                var button = entry.Q<Button>("ActionButton");
-                var i1 = i;
-                button.clicked += () =>
-                {
-                    player.Inventory.Remove(i1, invEntry.StackSize);
-                    m_Scrollview.contentContainer.Remove(entry);
-                };
+			for (int i = 0; i < player.Inventory.Entries.Length; ++i)
+			{
+				InventorySlot invEntry = player.Inventory.Entries[i];
+				Item item = invEntry.Item;
 
-                button.text = "Store";
+				if (item == null)
+				{
+					continue;
+				}
 
-                m_Scrollview.contentContainer.Add(entry);
-            }
-        }
+				TemplateContainer entry = m_EntryTemplate.CloneTree();
+				entry.Q<Label>("ItemName").text = item.DisplayName;
+				entry.Q<VisualElement>("ItemIcone").style.backgroundImage = new StyleBackground(item.ItemSprite);
 
-        void OpenRetrieve()
-        {
-            m_RetrieveButton.AddToClassList("activeButton");
-            m_StoreButton.RemoveFromClassList("activeButton");
+				Button button = entry.Q<Button>("ActionButton");
+				int i1 = i;
+				button.clicked += () =>
+				{
+					_ = player.Inventory.Remove(i1, invEntry.StackSize);
+					m_Scrollview.contentContainer.Remove(entry);
+				};
 
-            m_RetrieveButton.SetEnabled(false);
-            m_StoreButton.SetEnabled(true);
-            
-            m_Scrollview.contentContainer.Clear();
+				button.text = "Store";
 
-            var inventory = GameManager.Instance.Player.Inventory;
-        }
-    }
+				m_Scrollview.contentContainer.Add(entry);
+			}
+		}
+
+		private void OpenRetrieve()
+		{
+			m_RetrieveButton.AddToClassList("activeButton");
+			m_StoreButton.RemoveFromClassList("activeButton");
+
+			m_RetrieveButton.SetEnabled(false);
+			m_StoreButton.SetEnabled(true);
+
+			m_Scrollview.contentContainer.Clear();
+			_ = GameManager.Instance.Player.Inventory;
+		}
+	}
 }

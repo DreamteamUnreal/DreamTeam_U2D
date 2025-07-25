@@ -40,33 +40,33 @@ namespace HappyHarvest
 	{
 		public override VisualElement CreatePropertyGUI(SerializedProperty property)
 		{
-			var dayHandler = GameObject.FindFirstObjectByType<DayCycleHandler>();
+			DayCycleHandler dayHandler = GameObject.FindFirstObjectByType<DayCycleHandler>();
 
 			// Create property container element.
-			var container = new VisualElement();
+			VisualElement container = new();
 
 			if (dayHandler != null)
 			{
-				var minProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.StartTime));
-				var maxProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.EndTime));
+				SerializedProperty minProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.StartTime));
+				SerializedProperty maxProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.EndTime));
 
-				var slider = new MinMaxSlider(
+				MinMaxSlider slider = new(
 					$"Day range {GameManager.GetTimeAsString(minProperty.floatValue)} - {GameManager.GetTimeAsString(maxProperty.floatValue)}",
 					minProperty.floatValue, maxProperty.floatValue, 0.0f, 1.0f);
 
-				slider.RegisterValueChangedCallback(evt =>
+				_ = slider.RegisterValueChangedCallback(evt =>
 				{
 					minProperty.floatValue = evt.newValue.x;
 					maxProperty.floatValue = evt.newValue.y;
 
-					property.serializedObject.ApplyModifiedProperties();
+					_ = property.serializedObject.ApplyModifiedProperties();
 
 					slider.label =
 						$"Day range {GameManager.GetTimeAsString(minProperty.floatValue)} - {GameManager.GetTimeAsString(maxProperty.floatValue)}";
 				});
 
-				var evtOnProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.OnEvents));
-				var evtOffProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.OffEvent));
+				SerializedProperty evtOnProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.OnEvents));
+				SerializedProperty evtOffProperty = property.FindPropertyRelative(nameof(DayEventHandler.DayEvent.OffEvent));
 
 				container.Add(slider);
 
