@@ -5,28 +5,28 @@ using System.Linq; // For OrderBy
 
 public class Pathfinding : MonoBehaviour
 {
-    public TileInteractionManager tileManager; // Assign in Inspector
+	public TileInteractionManager tileManager; // Assign in Inspector
 
-    void Awake()
-    {
-        if (tileManager == null)
-        {
+	private void Awake()
+	{
+		if (tileManager == null)
+		{
 #pragma warning disable CS0618 // Type or member is obsolete
-            tileManager = FindObjectOfType<TileInteractionManager>();
+			tileManager = FindObjectOfType<TileInteractionManager>();
 #pragma warning restore CS0618 // Type or member is obsolete
-            if (tileManager == null)
-            {
-                Debug.LogError("Pathfinding: TileInteractionManager not found in scene!");
-            }
-        }
-    }
+			if (tileManager == null)
+			{
+				Debug.LogError("Pathfinding: TileInteractionManager not found in scene!");
+			}
+		}
+	}
 
-    /// <summary>
-    /// Finds a path from startCell to targetCell using the A* algorithm.
-    /// </summary>
-    /// <returns>A list of Vector3Int cells representing the path, or null if no path found.</returns>
-    public List<Vector3Int> FindPath(Vector3Int startCell,
-									 Vector3Int targetCell)
+	/// <summary>
+	/// Finds a path from startCell to targetCell using the A* algorithm.
+	/// </summary>
+	/// <returns>A list of Vector3Int cells representing the path, or null if no path found.</returns>
+	public List<Vector3Int> FindPath(Vector3Int startCell,
+									Vector3Int targetCell)
 	{
 		if (tileManager != null)
 		{
@@ -38,23 +38,23 @@ public class Pathfinding : MonoBehaviour
 			}
 
 			// --- A* Algorithm Implementation ---
-			List<Node> openSet = new List<Node>(); // Nodes to be evaluated
-			HashSet<Vector3Int> closedSet = new HashSet<Vector3Int>(); // Nodes already evaluated
+			List<Node> openSet = new(); // Nodes to be evaluated
+			HashSet<Vector3Int> closedSet = new(); // Nodes already evaluated
 
 			// Dictionary to store the best path to a node (gridPosition -> Node)
-			Dictionary<Vector3Int, Node> allNodes = new Dictionary<Vector3Int, Node>();
+			Dictionary<Vector3Int, Node> allNodes = new();
 
-			Node startNode = new Node(startCell, 0, GetDistance(startCell, targetCell), null);
+			Node startNode = new(startCell, 0, GetDistance(startCell, targetCell), null);
 			openSet.Add(startNode);
 			allNodes.Add(startNode.gridPosition, startNode);
 
 			while (openSet.Count > 0)
 			{
 				// Get the node with the lowest F cost from the open set
-				Node currentNode = openSet.OrderBy(node => node.fCost).First(); // Simple but less efficient than a Priority Queue
+				Node currentNode = openSet.OrderBy(node => node.FCost).First(); // Simple but less efficient than a Priority Queue
 
-				openSet.Remove(currentNode);
-				closedSet.Add(currentNode.gridPosition);
+				_ = openSet.Remove(currentNode);
+				_ = closedSet.Add(currentNode.gridPosition);
 
 				// If we reached the target, reconstruct and return the path
 				if (currentNode.gridPosition == targetCell)
@@ -72,8 +72,7 @@ public class Pathfinding : MonoBehaviour
 
 					int newGCost = currentNode.gCost + GetDistance(currentNode.gridPosition, neighborCell); // Cost to move to neighbor
 
-					Node neighborNode;
-					bool neighborExists = allNodes.TryGetValue(neighborCell, out neighborNode);
+					bool neighborExists = allNodes.TryGetValue(neighborCell, out Node neighborNode);
 
 					if (!neighborExists || newGCost < neighborNode.gCost)
 					{
@@ -109,31 +108,31 @@ public class Pathfinding : MonoBehaviour
 	/// Calculates the Manhattan distance (heuristic) between two cells.
 	/// </summary>
 	private int GetDistance(Vector3Int cellA, Vector3Int cellB)
-    {
-        int distX = Mathf.Abs(cellA.x - cellB.x);
-        int distY = Mathf.Abs(cellA.y - cellB.y);
+	{
+		int distX = Mathf.Abs(cellA.x - cellB.x);
+		int distY = Mathf.Abs(cellA.y - cellB.y);
 
-        // For diagonal movement, use a combination of straight and diagonal costs
-        // If 8-directional movement is allowed, diagonal cost is sqrt(2) * 10 = 14
-        // Straight cost is 10
-        // return 14 * Mathf.Min(distX, distY) + 10 * Mathf.Abs(distX - distY); // For 8-directional
-        return distX + distY; // For 4-directional (Manhattan) or simpler 8-directional
-    }
+		// For diagonal movement, use a combination of straight and diagonal costs
+		// If 8-directional movement is allowed, diagonal cost is sqrt(2) * 10 = 14
+		// Straight cost is 10
+		// return 14 * Mathf.Min(distX, distY) + 10 * Mathf.Abs(distX - distY); // For 8-directional
+		return distX + distY; // For 4-directional (Manhattan) or simpler 8-directional
+	}
 
-    /// <summary>
-    /// Reconstructs the path from the end node back to the start node.
-    /// </summary>
-    private List<Vector3Int> ReconstructPath(Node endNode)
-    {
-        List<Vector3Int> path = new List<Vector3Int>();
-        Node currentNode = endNode;
+	/// <summary>
+	/// Reconstructs the path from the end node back to the start node.
+	/// </summary>
+	private List<Vector3Int> ReconstructPath(Node endNode)
+	{
+		List<Vector3Int> path = new();
+		Node currentNode = endNode;
 
-        while (currentNode != null)
-        {
-            path.Add(currentNode.gridPosition);
-            currentNode = currentNode.parent;
-        }
-        path.Reverse(); // Path is built backwards, so reverse it
-        return path;
-    }
+		while (currentNode != null)
+		{
+			path.Add(currentNode.gridPosition);
+			currentNode = currentNode.parent;
+		}
+		path.Reverse(); // Path is built backwards, so reverse it
+		return path;
+	}
 }
