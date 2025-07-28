@@ -1,18 +1,10 @@
-// PieScoreManager.cs
-using TMPro; // Make sure TextMeshPro is imported in the project if not already
+using TMPro;
 using UnityEngine;
-using Random = UnityEngine.Random; // Explicitly use UnityEngine.Random to avoid ambiguity with System.Random
 
-namespace HappyHarvest // Add the HappyHarvest namespace
+namespace HappyHarvest
 {
-	public class PieScoreManager : MonoBehaviour
+    public class PieScoreManager : MonoBehaviour
 	{
-		// Change to private static, and provide a public accessor via GameManager
-		// This makes it consistent with how other managers are accessed (e.g., GameManager.Instance.PieScoreManager)
-		// If absolutely need a direct static instance, ensure its Awake runs early.
-		// For now, I'll assume GameManager.Instance will hold the reference.
-		// public static PieScoreManager Instance; // Remove this if GameManager holds the reference
-
 		[Header("UI")]
 		public TMP_Text currentPiesText;
 		public TMP_Text currentRoundText;
@@ -21,7 +13,7 @@ namespace HappyHarvest // Add the HappyHarvest namespace
 		public TMP_Text playerScoreText;
 		public TMP_Text highScoreText;
 
-		[Header("Pie Settings")]
+        [Header("Pie Settings")]
 		public int piesMade = 0;
 		public int piesRequired = 5; // Start with a default requirement
 		public int totalPiesMade = 0;
@@ -29,34 +21,42 @@ namespace HappyHarvest // Add the HappyHarvest namespace
 		public int playerScore = 0;
 		public int roundNum = 0;
 
-		[Header("HighScore Settings")]
 		private int highScore = 0;
 
-		private void Awake()
+        [Header("References")]
+        [SerializeField] private GameOverUI gameOverUIManager;
+
+
+        private int PlayerScore
+        {
+            get => PlayerData.Instance.score;
+            set => PlayerData.Instance.score = value;
+        }
+
+        // I took this out I didnt have it before I dont see a need for it. Keeping it just in case 
+        /*private void Awake()
 		{
-			// Register with GameManager.Instance
-			// Ensure GameManager's Awake runs BEFORE PieScoreManager's Awake
-			// by setting GameManager's Script Execution Order to a lower value (e.g., -200)
 			if (GameManager.Instance != null)
 			{
 				Debug.LogError("PieScoreManager: GameManager.Instance is null in Awake! Check Script Execution Order.");
 				// Optionally destroy this GameObject if GameManager is essential and not found
 				// Destroy(gameObject);
 			}
-		}
+		}*/
 
-		private void Start()
+        private void Start()
 		{
 			// Loads the high score
 			highScore = PlayerPrefs.GetInt("HighPieScore", 0);
+			currentRounds = 1; // Current round the player will start on
+			roundNum = currentRounds + 1; // roundNum is the currentRounds + 1 meaning the next round
 
-			// Start from round 1, and deadline is round 2
-			currentRounds = 1;
-			roundNum = currentRounds + 1; // This means the UI will show "Round 1 / Round 2" initially
+			
 
-			UpdateUI();
+			UpdateUI(); // Update the UI
 		}
 
+		// AddPie You will only need to call this function where the pies are made
 		public void AddPie()
 		{
 			piesMade++;
@@ -64,7 +64,7 @@ namespace HappyHarvest // Add the HappyHarvest namespace
 
 			if (piesMade > piesRequired)
 			{
-				int bonus = 80 + Random.Range(50, 91); // 80 + random 5090
+				int bonus = 80 + Random.Range(50, 91); // 80 + random 5091
 				playerScore += bonus;
 				Debug.Log($"Bonus Pie! +{bonus} points");
 			}
@@ -85,6 +85,7 @@ namespace HappyHarvest // Add the HappyHarvest namespace
 			UpdateUI();
 		}
 
+		// Do not worry about start new round :) 
 		private void StartNewRound()
 		{
 			piesMade = 0;
@@ -97,11 +98,14 @@ namespace HappyHarvest // Add the HappyHarvest namespace
 			UpdateUI();
 		}
 
+		// Call EndRound at the end of the round how ever it ends
 		public void EndRound()
 		{
 			CheckRoundResult();
 		}
-
+		
+		// RestartGame is a function the sets everything back to round one
+		// We can call this at game over or restart
 		public void RestartGame()
 		{
 			piesMade = 0;
@@ -118,30 +122,38 @@ namespace HappyHarvest // Add the HappyHarvest namespace
 			Debug.Log("Game has been reset.");
 		}
 
+		// CheckRoundResult checks the round no need to change
 		private void CheckRoundResult()
 		{
-			if (piesMade < piesRequired)
-			{
-				Debug.Log("Game Over - not enough pies!");
+            if (piesMade < piesRequired)
+            {
+                if (gameOverUIManager != null)
+                {
+                    gameOverUIManager.ShowGameOver(playerScore, highScore, totalPiesMade);
+                }
+                else
+                {
+                    Debug.LogWarning("GameOverUIManager is not assigned in PieScoreManager!");
+                }
 
-				// Save a new high score if achieved (using totalPiesMade for high score)
-				if (totalPiesMade > highScore)
-				{
-					highScore = totalPiesMade;
-					PlayerPrefs.SetInt("HighPieScore", highScore);
-					PlayerPrefs.Save();
-					Debug.Log($"New High Score: {highScore}");
-				}
-				// Might want to trigger a "Game Over" UI screen here
-				// GameManager.Instance.ShowGameOverScreen(); // Example
-			}
-			else
-			{
-				Debug.Log("Round Complete!");
-				StartNewRound(); // Automatically start next round if successful
-			}
-		}
+                // Save high score if achieved
+                if (totalPiesMade > highScore)
+                {
+                    highScore = totalPiesMade;
+                    PlayerPrefs.SetInt("HighPieScore", highScore);
+                    PlayerPrefs.Save();
+                    Debug.Log($"New High Score: {highScore}");
+                }
+            }
+            else
+            {
+                Debug.Log("Round Complete!");
+                StartNewRound();
+            }
+        }
 
+
+		// UpdateUI just updates the UI
 		private void UpdateUI()
 		{
 			// Add null checks for all TMP_Text references
