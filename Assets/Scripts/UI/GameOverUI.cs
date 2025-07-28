@@ -31,17 +31,17 @@ public class GameOverUI : MonoBehaviour
 
 			if (finalScoreText != null)
 			{
-				finalScoreText.text = $"Final Score: {finalScore}";
+				finalScoreText.text = $" {finalScore}";
 			}
 
 			if (highScoreText != null)
 			{
-				highScoreText.text = $"High Score: {highScore}";
+				highScoreText.text = $" {highScore}";
 			}
 
 			if (totalPiesText != null)
 			{
-				totalPiesText.text = $"Total Pies Made: {totalPies}";
+				totalPiesText.text = $" {totalPies}";
 			}
 		}
 	}
