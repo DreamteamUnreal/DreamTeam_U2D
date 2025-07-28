@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Template name="SettingsMenu" src="project://database/Assets/HappyHarvest/Common/UI/SettingMenu/SettingsMenu.uxml?fileID=9197481963319205126&amp;guid=f56a0812d09cf4b4cb75e25f035636c1&amp;type=3#SettingsMenu" />
+    <ui:Template name="SettingsMenu" src="project://database/Assets/UI/GameOver.uxml?fileID=9197481963319205126&amp;guid=0000000000000000e000000000000000&amp;type=3#SettingsMenu" />
     <Style src="project://database/Assets/HappyHarvest/UI/GameUI.uss?fileID=7433441132597879392&amp;guid=59b1a0b3477344945ae509fbe8d014a6&amp;type=3#GameUI" />
     <ui:VisualElement name="Inventory" style="background-color: rgba(0, 0, 0, 0); height: 100px; position: absolute; bottom: 0; width: 100%; flex-direction: row; align-items: center; justify-content: center;">
         <ui:VisualElement name="InventoryEntry" style="flex-grow: 0; width: 80px; height: 80px; flex-direction: row;">
