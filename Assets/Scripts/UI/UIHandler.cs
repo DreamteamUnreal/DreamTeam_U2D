@@ -204,7 +204,7 @@ namespace HappyHarvest
 			m_SunLabel = m_Document.rootVisualElement.Q<Label>("SunLabel");
 			if (m_SunLabel != null)
 			{
-				m_SunLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) { GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Sun); } }));
+				m_SunLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance != null ? GameManager.Instance.WeatherSystem : null != null) { GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Sun); } }));
 			}
 			else
 			{
@@ -214,7 +214,7 @@ namespace HappyHarvest
 			m_RainLabel = m_Document.rootVisualElement.Q<Label>("RainLabel");
 			if (m_RainLabel != null)
 			{
-				m_RainLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) { GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Rain); } }));
+				m_RainLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance != null ? GameManager.Instance.WeatherSystem : null != null) { GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Rain); } }));
 			}
 			else
 			{
@@ -224,7 +224,7 @@ namespace HappyHarvest
 			m_ThunderLabel = m_Document.rootVisualElement.Q<Label>("ThunderLabel");
 			if (m_ThunderLabel != null)
 			{
-				m_ThunderLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance?.WeatherSystem != null) { GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Thunder); } }));
+				m_ThunderLabel.AddManipulator(new Clickable(() => { if (GameManager.Instance != null ? GameManager.Instance.WeatherSystem : null != null) { GameManager.Instance.WeatherSystem.ChangeWeather(WeatherSystem.WeatherType.Thunder); } }));
 			}
 			else
 			{
@@ -253,7 +253,7 @@ namespace HappyHarvest
 			}
 
 			// Initial weather icon update
-			if (GameManager.Instance?.WeatherSystem != null)
+			if (GameManager.Instance != null ? GameManager.Instance.WeatherSystem : null != null)
 			{
 				UpdateWeatherIcons(GameManager.Instance.WeatherSystem.CurrentWeather);
 			}
