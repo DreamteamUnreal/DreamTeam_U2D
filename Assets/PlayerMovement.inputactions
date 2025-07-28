@@ -29,7 +29,22 @@
                     "name": "",
                     "id": "c3f90f31-4dcb-4cc8-b3b2-8b543b44097a",
                     "path": "<Mouse>/leftButton",
+<<<<<<< HEAD
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "56e6c259-d24d-4bfa-8d78-be44a7ca97aa",
+                    "path": "<Mouse>/press",
+                    "interactions": "",
+=======
                     "interactions": "Press",
+>>>>>>> main
                     "processors": "",
                     "groups": "",
                     "action": "MouseClick",
