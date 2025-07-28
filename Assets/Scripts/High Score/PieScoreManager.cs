@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace HappyHarvest
 {
-	public class PieScoreManager : MonoBehaviour
+    public class PieScoreManager : MonoBehaviour
 	{
 		[Header("UI")]
 		public TMP_Text currentPiesText;
@@ -13,7 +13,7 @@ namespace HappyHarvest
 		public TMP_Text playerScoreText;
 		public TMP_Text highScoreText;
 
-		[Header("Pie Settings")]
+        [Header("Pie Settings")]
 		public int piesMade = 0;
 		public int piesRequired = 5; // Start with a default requirement
 		public int totalPiesMade = 0;
@@ -21,11 +21,20 @@ namespace HappyHarvest
 		public int playerScore = 0;
 		public int roundNum = 0;
 
-		[Header("HighScore Settings")]
 		private int highScore = 0;
 
-		// I took this out I didnt have it before I dont see a need for it. Keeping it just in case 
-		/*private void Awake()
+        [Header("References")]
+        [SerializeField] private GameOverUI gameOverUIManager;
+
+
+        private int PlayerScore
+        {
+            get => PlayerData.Instance.score;
+            set => PlayerData.Instance.score = value;
+        }
+
+        // I took this out I didnt have it before I dont see a need for it. Keeping it just in case 
+        /*private void Awake()
 		{
 			if (GameManager.Instance != null)
 			{
@@ -35,14 +44,14 @@ namespace HappyHarvest
 			}
 		}*/
 
-		private void Start()
+        private void Start()
 		{
 			// Loads the high score
 			highScore = PlayerPrefs.GetInt("HighPieScore", 0);
-
-			
 			currentRounds = 1; // Current round the player will start on
 			roundNum = currentRounds + 1; // roundNum is the currentRounds + 1 meaning the next round
+
+			
 
 			UpdateUI(); // Update the UI
 		}
@@ -116,26 +125,32 @@ namespace HappyHarvest
 		// CheckRoundResult checks the round no need to change
 		private void CheckRoundResult()
 		{
-			if (piesMade < piesRequired)
-			{
-				Debug.Log("Game Over - not enough pies!");
+            if (piesMade < piesRequired)
+            {
+                if (gameOverUIManager != null)
+                {
+                    gameOverUIManager.ShowGameOver(playerScore, highScore, totalPiesMade);
+                }
+                else
+                {
+                    Debug.LogWarning("GameOverUIManager is not assigned in PieScoreManager!");
+                }
 
-				// Save a new high score if achieved (using totalPiesMade for high score)
-				if (totalPiesMade > highScore)
-				{
-					highScore = totalPiesMade;
-					PlayerPrefs.SetInt("HighPieScore", highScore);
-					PlayerPrefs.Save();
-					Debug.Log($"New High Score: {highScore}");
-				}
-				
-			}
-			else
-			{
-				Debug.Log("Round Complete!");
-				StartNewRound(); // Automatically start next round if successful
-			}
-		}
+                // Save high score if achieved
+                if (totalPiesMade > highScore)
+                {
+                    highScore = totalPiesMade;
+                    PlayerPrefs.SetInt("HighPieScore", highScore);
+                    PlayerPrefs.Save();
+                    Debug.Log($"New High Score: {highScore}");
+                }
+            }
+            else
+            {
+                Debug.Log("Round Complete!");
+                StartNewRound();
+            }
+        }
 
 
 		// UpdateUI just updates the UI

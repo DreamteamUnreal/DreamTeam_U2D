@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2537314631883857579
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3176640493239372108}
+  - component: {fileID: 2544976639031403459}
+  m_Layer: 0
+  m_Name: HighScoreHelper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3176640493239372108
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2537314631883857579}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 7.349493, y: -6.3307185, z: -0.13494538}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2544976639031403459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2537314631883857579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 215320044a7be1d45a5bbe6ad0aebd86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentPiesText: {fileID: 0}
+  currentRoundText: {fileID: 0}
+  numPiesText: {fileID: 0}
+  numRoundsText: {fileID: 0}
+  playerScoreText: {fileID: 0}
+  highScoreText: {fileID: 0}
+  piesMade: 0
+  piesRequired: 5
+  totalPiesMade: 0
+  currentRounds: 1
+  playerScore: 0
+  roundNum: 0
+  gameOverUIManager: {fileID: 0}
