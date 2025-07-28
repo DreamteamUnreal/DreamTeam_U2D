@@ -5,13 +5,13 @@ using HappyHarvest;
 public class Oven : InteractiveObject // Or whatever your crafting station is
 {
 	public Item pieItemDefinition; // Assign your "Pie" Item ScriptableObject here
-
+	public PieScoreManager pieScore; // This lets you use my pieScoreManager script :)
 	public override void InteractedWith()
 	{
 		// Call AddPie() on the PieScoreManager
-		if (GameManager.Instance != null && GameManager.Instance.PieScoreManager != null)
+		if (GameManager.Instance != null)
 		{
-			GameManager.Instance.PieScoreManager.AddPie();
+			pieScore.AddPie(); // One pie will be added to the ui as well as the score
 			Debug.Log("A pie has been made!");
 		}
 		else
