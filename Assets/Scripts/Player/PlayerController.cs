@@ -1,4 +1,5 @@
-//PlayerController.cs
+// PlayerController.cs
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -31,13 +32,12 @@ namespace HappyHarvest
 		private List<Vector3Int> m_CurrentPath; // The path the player is currently following
 		private int m_PathIndex;                // Current index in the path
 		public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
-		private readonly InputAction m_ClickToMoveAction; // New Action for click-to-move input
+		private readonly InputAction m_ClickToMoveAction; // New Action for click-to-move input (marked readonly as it's assigned in Awake/Start)
 
-		[field: SerializeField]
-		public InventorySystem Inventory { get; }
+		[field: SerializeField] // Allows Inventory to be set in Inspector while having a public getter
+		public InventorySystem Inventory { get; private set; } // Changed to private set
 		public Animator Animator { get; private set; }
 
-		// --- THIS IS THE CRUCIAL PROPERTY THAT MUST BE PRESENT ---
 		public CraftingManager CraftingManager { get; private set; } // <--- THIS IS IT!
 
 		[SerializeField]
@@ -54,16 +54,16 @@ namespace HappyHarvest
 
 		private TargetMarker m_TargetMarker;
 
+#pragma warning disable IDE0052 // Remove unread private members
 		private bool m_HasTarget = false;
+#pragma warning restore IDE0052 // Remove unread private members
 		private bool m_IsOverUI = false;
 
 		private bool m_CanControl = true;
-		private InteractiveObject m_CurrentInteractiveTarget = null;
 #pragma warning disable IDE0052 // Remove unread private members
 		private readonly Collider2D[] m_CollidersCache = new Collider2D[8];
 #pragma warning restore IDE0052 // Remove unread private members
 
-		// Changed dictionary key from Item to string (ItemID) as per previous fix
 		private readonly Dictionary<string, ItemInstance> m_ItemVisualInstance = new();
 
 		private readonly int m_DirXHash = Animator.StringToHash("DirX");
@@ -98,8 +98,6 @@ namespace HappyHarvest
 				Debug.LogError("PlayerController: TileInteractionManager not found in scene!");
 			}
 
-			// --- NEW: Get CraftingManager reference ---
-			// CraftingManager should be on the same GameObject as PlayerController
 			CraftingManager = GetComponent<CraftingManager>();
 			if (CraftingManager == null)
 			{
@@ -153,11 +151,15 @@ namespace HappyHarvest
 			UIHandler.UpdateCoins(m_Coins);
 		}
 
-		[System.Obsolete]
+		private void UseObject()
+		{
+			throw new NotImplementedException();
+		}
+
+		[Obsolete]
 		private void Update()
 		{
 			m_IsOverUI = EventSystem.current.IsPointerOverGameObject();
-			m_CurrentInteractiveTarget = null;
 			m_HasTarget = false;
 
 			if (!IsMouseOverGameWindow())
@@ -172,7 +174,6 @@ namespace HappyHarvest
 				{
 					UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
 				}
-
 				return;
 			}
 
@@ -181,7 +182,7 @@ namespace HappyHarvest
 
 			if (overlapCol != null)
 			{
-				m_CurrentInteractiveTarget = overlapCol.GetComponent<InteractiveObject>();
+				_ = overlapCol.GetComponent<InteractiveObject>();
 				m_HasTarget = false; // Player is targeting an interactive object, not a tile
 				UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
 				return;
@@ -235,37 +236,21 @@ namespace HappyHarvest
 				{
 					SaveSystem.Load();
 				}
+				// Example: Open Crafting Menu with 'C' key
+				else if (Keyboard.current.cKey.wasPressedThisFrame)
+				{
+					UIHandler.OpenCraftingMenu();
+				}
+				// Example: Open Settings Menu with 'Escape' key
+				else if (Keyboard.current.escapeKey.wasPressedThisFrame)
+				{
+					UIHandler.OpenSettingMenu();
+				}
 			}
 			else
 			{
 				Debug.LogWarning("Keyboard.current is null. Input system might not be initialized yet.");
 			}
-		}
-
-		private void UseObject()
-		{
-			if (m_IsOverUI)
-			{
-				return;
-			}
-
-			if (m_CurrentInteractiveTarget != null)
-			{
-				m_CurrentInteractiveTarget.InteractedWith();
-				return;
-			}
-
-			// Only allow item use if an item is equipped AND it either doesn't need a target, or a valid target exists
-			// You need to add a 'NeedTarget()' method to your Item.cs if you want to use this.
-			// public virtual bool NeedTarget() { return false; } in Item.cs
-			// and override in Tool/Seed etc.
-			// For now, I'll comment out the NeedTarget() check to avoid compilation errors if it's missing.
-			if (Inventory.EquippedItem != null /* && m_Inventory.EquippedItem.NeedTarget() */ && !m_HasTarget)
-			{
-				return;
-			}
-
-			UseItem();
 		}
 
 		private void FixedUpdate()
@@ -557,7 +542,6 @@ namespace HappyHarvest
 		public int AnimatorHash;
 	}
 
-	[System.Serializable]
 	public struct PlayerSaveData
 	{
 		public Vector3 Position;
