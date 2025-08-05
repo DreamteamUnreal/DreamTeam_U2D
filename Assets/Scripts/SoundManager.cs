@@ -100,5 +100,10 @@ namespace Template2DCommon
 				UpdateVolume();
 			}
 		}
+
+		internal void PlaySFXAt(AudioClip pieCraftSound, Vector3 zero)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
