@@ -148,13 +148,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7aaabf1ce21bf941ac2b6e07aeeaa6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LastSpawnIndex: 0
   MarketEntries:
   - {fileID: 11400000, guid: 049df2fdc39a1ab4f80a2de6d2d7d8a2, type: 2}
   - {fileID: 11400000, guid: 7f6b8f8fade48f64492add0e59a790df, type: 2}
-  DayDurationInSeconds: 120
-  StartingTime: 46
-  ItemDatabase: {fileID: 11400000, guid: 9af3a7812e32d5e4b958cde796a24cb4, type: 2}
-  CropDatabase: {fileID: 11400000, guid: f182af223b74ea44e9c60decb92a78b7, type: 2}
+  CurrentDayRatio: 0
 --- !u!4 &691290670
 Transform:
   m_ObjectHideFlags: 0
@@ -317,6 +315,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 691290670}
     m_Modifications:
+    - target: {fileID: 341222602696589341, guid: 8fa437e9c0cefdb4385791766ac74c92, type: 3}
+      propertyPath: MarketSellSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 4e46768d8221eac4f99d8150961c5b58, type: 3}
+    - target: {fileID: 341222602696589341, guid: 8fa437e9c0cefdb4385791766ac74c92, type: 3}
+      propertyPath: MarketEntryTemplate
+      value: 
+      objectReference: {fileID: 9197481963319205126, guid: 6da260585916c644a82ccd819407a675, type: 3}
+    - target: {fileID: 3646233350030952452, guid: 8fa437e9c0cefdb4385791766ac74c92, type: 3}
+      propertyPath: sourceAsset
+      value: 
+      objectReference: {fileID: 9197481963319205126, guid: 90544aa491e5e514197c2a1f559fc9f6, type: 3}
     - target: {fileID: 8113580159170062323, guid: 8fa437e9c0cefdb4385791766ac74c92, type: 3}
       propertyPath: m_RootOrder
       value: 10
@@ -364,6 +374,10 @@ PrefabInstance:
     - target: {fileID: 8345787100586716791, guid: 8fa437e9c0cefdb4385791766ac74c92, type: 3}
       propertyPath: m_Name
       value: UI
+      objectReference: {fileID: 0}
+    - target: {fileID: 8345787100586716791, guid: 8fa437e9c0cefdb4385791766ac74c92, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
