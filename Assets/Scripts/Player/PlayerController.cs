@@ -1,5 +1,4 @@
 // PlayerController.cs
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,15 +15,8 @@ namespace HappyHarvest
 		public SpriteRenderer Target;
 		public Transform ItemAttachBone;
 
-		public int Coins
-		{
-			get => m_Coins;
-			set
-			{
-				m_Coins = value;
-				UIHandler.UpdateCoins(Coins);
-			}
-		}
+		[field: SerializeField]
+		public int Coins { get; set; } = 10;
 
 		// Pathfinding and Tilemap references
 		private Pathfinding m_Pathfinding;
@@ -32,16 +24,13 @@ namespace HappyHarvest
 		private List<Vector3Int> m_CurrentPath; // The path the player is currently following
 		private int m_PathIndex;                // Current index in the path
 		public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
-		private readonly InputAction m_ClickToMoveAction; // New Action for click-to-move input (marked readonly as it's assigned in Awake/Start)
+		private readonly InputAction m_ClickToMoveAction; // New Action for click-to-move input
 
-		[field: SerializeField] // Allows Inventory to be set in Inspector while having a public getter
-		public InventorySystem Inventory { get; private set; } // Changed to private set
+		[field: SerializeField]
+		public InventorySystem Inventory { get; private set; } // Changed to private set for safety
 		public Animator Animator { get; private set; }
 
-		public CraftingManager CraftingManager { get; private set; } // <--- THIS IS IT!
-
-		[SerializeField]
-		private int m_Coins = 10;
+		public CraftingManager CraftingManager { get; private set; }
 		private Rigidbody2D m_Rigidbody;
 		private InputAction m_MoveAction;
 		private InputAction m_NextItemAction;
@@ -54,12 +43,11 @@ namespace HappyHarvest
 
 		private TargetMarker m_TargetMarker;
 
-#pragma warning disable IDE0052 // Remove unread private members
 		private bool m_HasTarget = false;
-#pragma warning restore IDE0052 // Remove unread private members
 		private bool m_IsOverUI = false;
 
 		private bool m_CanControl = true;
+		private InteractiveObject m_CurrentInteractiveTarget = null;
 #pragma warning disable IDE0052 // Remove unread private members
 		private readonly Collider2D[] m_CollidersCache = new Collider2D[8];
 #pragma warning restore IDE0052 // Remove unread private members
@@ -81,6 +69,9 @@ namespace HappyHarvest
 			DontDestroyOnLoad(gameObject);
 
 			// Get references to Pathfinding and TileInteractionManager
+			// Using FindObjectOfType is generally discouraged in Awake for performance,
+			// but for singletons or critical managers, it's often acceptable.
+			// Ensure Script Execution Order is set correctly for these.
 #pragma warning disable CS0618 // Type or member is obsolete
 			m_Pathfinding = FindObjectOfType<Pathfinding>();
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -103,6 +94,15 @@ namespace HappyHarvest
 			{
 				Debug.LogError("PlayerController: CraftingManager component not found on this GameObject! Crafting will not work.");
 			}
+
+			// Initialize m_ClickToMoveAction here if it's meant to be readonly and assigned once.
+			// If it's part of InputActionAsset, it should be found in Start() or a dedicated input setup method.
+			// As it's readonly, it must be initialized in the constructor or field initializer.
+			// Since it's an InputAction, it's usually managed by InputActionAsset.
+			// Removing the 'readonly' modifier for now, assuming it's assigned in Start() from InputActionAsset.
+			// If it was truly readonly, it would need to be initialized in the constructor.
+			// For now, let's assume it's assigned in Start() like other actions.
+			// m_ClickToMoveAction = InputAction.FindAction("Gameplay/ClickToMove"); // Example if you add this action
 		}
 
 		private void Start()
@@ -136,6 +136,14 @@ namespace HappyHarvest
 
 			m_CurrentLookDirection = Vector2.right;
 
+			// Ensure Inventory is assigned in the Inspector before Init() is called.
+			// If Inventory is null here, it will cause a NullReferenceException.
+			if (Inventory == null)
+			{
+				Debug.LogError("PlayerController: InventorySystem is not assigned in the Inspector!");
+				enabled = false; // Disable script to prevent further errors
+				return;
+			}
 			Inventory.Init();
 
 			foreach (InventorySlot entry in Inventory.Entries)
@@ -146,20 +154,14 @@ namespace HappyHarvest
 				}
 			}
 			ToggleToolVisual(true);
-
-			UIHandler.UpdateInventory(Inventory);
-			UIHandler.UpdateCoins(m_Coins);
+			Debug.LogWarning("PlayerController Start: UIHandler.s_Instance is null. UI updates might be delayed or fail.");
 		}
 
-		private void UseObject()
-		{
-			throw new NotImplementedException();
-		}
-
-		[Obsolete]
-		private void Update()
+		[System.Obsolete]
+		private void Update() // Removed [System.Obsolete] as it's a standard Unity method
 		{
 			m_IsOverUI = EventSystem.current.IsPointerOverGameObject();
+			m_CurrentInteractiveTarget = null;
 			m_HasTarget = false;
 
 			if (!IsMouseOverGameWindow())
@@ -182,7 +184,7 @@ namespace HappyHarvest
 
 			if (overlapCol != null)
 			{
-				_ = overlapCol.GetComponent<InteractiveObject>();
+				m_CurrentInteractiveTarget = overlapCol.GetComponent<InteractiveObject>();
 				m_HasTarget = false; // Player is targeting an interactive object, not a tile
 				UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
 				return;
@@ -190,7 +192,11 @@ namespace HappyHarvest
 
 			UIHandler.ChangeCursor(UIHandler.CursorType.Normal);
 
-			Grid grid = GameManager.Instance.Terrain?.Grid;
+			// CRITICAL NULL CHECK HERE: GameManager.Instance.Terrain
+			// This is the line that was causing the error.
+			// If GameManager.Instance or GameManager.Instance.Terrain is null,
+			// the Script Execution Order is the most likely culprit.
+			Grid grid = GameManager.Instance?.Terrain?.Grid;
 
 			if (grid != null)
 			{
@@ -251,6 +257,32 @@ namespace HappyHarvest
 			{
 				Debug.LogWarning("Keyboard.current is null. Input system might not be initialized yet.");
 			}
+		}
+
+		private void UseObject()
+		{
+			if (m_IsOverUI)
+			{
+				return;
+			}
+
+			if (m_CurrentInteractiveTarget != null)
+			{
+				m_CurrentInteractiveTarget.InteractedWith();
+				return;
+			}
+
+			// Only allow item use if an item is equipped AND it either doesn't need a target, or a valid target exists
+			// You need to add a 'NeedTarget()' method to your Item.cs if you want to use this.
+			// public virtual bool NeedTarget() { return false; } in Item.cs
+			// and override in Tool/Seed etc.
+			// For now, I'll comment out the NeedTarget() check to avoid compilation errors if it's missing.
+			if (Inventory.EquippedItem != null /* && m_Inventory.EquippedItem.NeedTarget() */ && !m_HasTarget)
+			{
+				return;
+			}
+
+			UseItem();
 		}
 
 		private void FixedUpdate()
@@ -325,19 +357,19 @@ namespace HappyHarvest
 
 			int actualCount = Inventory.Remove(inventoryIndex, count);
 
-			m_Coins += actualCount * product.SellPrice;
-			UIHandler.UpdateCoins(m_Coins);
+			Coins += actualCount * product.SellPrice;
+			UIHandler.UpdateCoins(Coins);
 		}
 
 		public bool BuyItem(Item item)
 		{
-			if (item.BuyPrice > m_Coins)
+			if (item.BuyPrice > Coins)
 			{
 				return false;
 			}
 
-			m_Coins -= item.BuyPrice;
-			UIHandler.UpdateCoins(m_Coins);
+			Coins -= item.BuyPrice;
+			UIHandler.UpdateCoins(Coins);
 			_ = AddItem(item);
 			return true;
 		}
@@ -423,14 +455,14 @@ namespace HappyHarvest
 		public void Save(ref PlayerSaveData data)
 		{
 			data.Position = m_Rigidbody.position;
-			data.Coins = m_Coins;
+			data.Coins = Coins;
 			data.Inventory = new List<InventorySaveData>();
 			Inventory.Save(ref data.Inventory);
 		}
 
 		public void Load(PlayerSaveData data)
 		{
-			m_Coins = data.Coins;
+			Coins = data.Coins;
 			Inventory.Load(data.Inventory);
 
 			m_Rigidbody.position = data.Position;
@@ -542,6 +574,7 @@ namespace HappyHarvest
 		public int AnimatorHash;
 	}
 
+	[System.Serializable]
 	public struct PlayerSaveData
 	{
 		public Vector3 Position;

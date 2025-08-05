@@ -26,6 +26,8 @@ namespace HappyHarvest
 			public UnityEvent OnEvents;
 			public UnityEvent OffEvent;
 
+			public object Name { get; internal set; }
+
 			public bool IsInRange(float t)
 			{
 				return t >= StartTime && t <= EndTime;
@@ -40,7 +42,7 @@ namespace HappyHarvest
 	{
 		public override VisualElement CreatePropertyGUI(SerializedProperty property)
 		{
-			DayCycleHandler dayHandler = GameObject.FindFirstObjectByType<DayCycleHandler>();
+			DayCycleHandler dayHandler = Object.FindFirstObjectByType<DayCycleHandler>();
 
 			// Create property container element.
 			VisualElement container = new();

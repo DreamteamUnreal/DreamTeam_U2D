@@ -1,11 +1,9 @@
-//GameManager.cs
-using System.Collections.Generic;
-using System.Linq;
+// GameManager.cs
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.Tilemaps;
-
-// Required for SceneManager
+using System.Collections.Generic;
+using System.Linq; // For .FirstOrDefault()
+using UnityEngine.Tilemaps; // For Tilemap type
+using UnityEngine.SceneManagement; // Required for SceneManager
 
 namespace HappyHarvest
 {
@@ -26,9 +24,9 @@ namespace HappyHarvest
 		public TerrainManager Terrain { get; private set; }
 		public WeatherSystem WeatherSystem { get; private set; }
 		public CropDatabase CropDatabase { get; private set; }
-
+		// These properties are set by their respective components' Awake/OnEnable methods
 		public Tilemap WalkSurfaceTilemap { get; set; }
-		public SceneData CurrentSceneDataComponent { get; set; } // This is the MonoBehaviour component in the scene
+		public SceneData CurrentSceneDataComponent { get; set; }
 
 		// --- SpawnPoint Management ---
 		private readonly List<SpawnPoint> m_SpawnPoints = new();
@@ -36,7 +34,6 @@ namespace HappyHarvest
 
 		// --- Day Event Handling ---
 		private readonly List<DayEventHandler> m_DayEventHandlers = new();
-		// This struct helps track the state of each DayEvent (whether its OnEvent was triggered)
 		private struct DayEventState
 		{
 			public DayEventHandler Handler;
@@ -46,13 +43,12 @@ namespace HappyHarvest
 		private readonly List<DayEventState> m_DayEventStates = new();
 
 
-		// --- Existing Properties ---
+		// --- Game Settings ---
 		[Header("Market Settings")]
 		public Item[] MarketEntries;
 		[Tooltip("The current progress of the day (0.0 = start of day, 1.0 = end of day).")]
-		public float CurrentDayRatio = 0.0f; // This should ideally be driven by DayCycleHandler
+		public float CurrentDayRatio = 0.0f; // This should be driven by DayCycleHandler
 
-		// Removed [System.Obsolete] as Awake is now fully functional
 		[System.Obsolete]
 		private void Awake()
 		{
@@ -66,12 +62,19 @@ namespace HappyHarvest
 			DontDestroyOnLoad(gameObject);
 
 			// --- Find and Assign Sub-Managers/Systems ---
+			// These are generally found once at startup.
 			// Ensure Script Execution Order is set correctly for these dependencies.
 
 			ItemManager = FindObjectOfType<ItemManager>();
 			if (ItemManager == null)
 			{
-				Debug.LogError("GameManager: ItemManager not found in the scene!");
+				Debug.LogError("GameManager: ItemManager not found in the scene! Item loading will fail.");
+			}
+
+			CropDatabase = FindObjectOfType<CropDatabase>();
+			if (CropDatabase == null)
+			{
+				Debug.LogError("GameManager: CropDatabase not found in the scene! Crop loading will fail.");
 			}
 
 			Player = FindObjectOfType<PlayerController>();
@@ -103,13 +106,6 @@ namespace HappyHarvest
 			{
 				Debug.LogWarning("GameManager: WeatherSystem not found in scene.");
 			}
-
-			CropDatabase = FindObjectOfType<CropDatabase>();
-			if (CropDatabase == null)
-			{
-				Debug.LogError("GameManager: CropDatabase not found in the scene!");
-			}
-
 			Debug.Log("GameManager Initialized.");
 		}
 
@@ -158,9 +154,10 @@ namespace HappyHarvest
 			// Iterate through a copy to avoid issues if handlers unregister themselves during iteration
 			foreach (DayEventState state in m_DayEventStates.ToList()) // .ToList() creates a copy
 			{
+				// Check if the handler or its events array is still valid
 				if (state.Handler == null || state.EventIndex >= state.Handler.Events.Length)
 				{
-					// Handler or event no longer valid, will be removed on next unregister or scene load
+					// This state is invalid, it will be cleaned up by RemoveAll on next unregister or scene load
 					continue;
 				}
 
@@ -177,6 +174,8 @@ namespace HappyHarvest
 					{
 						m_DayEventStates[index] = new DayEventState { Handler = state.Handler, EventIndex = state.EventIndex, WasInRange = true };
 					}
+
+					Debug.Log($"DayEvent '{dayEvent.Name}' ON triggered at {CurrentDayRatio}");
 				}
 				else if (!isInRange && state.WasInRange)
 				{
@@ -188,6 +187,8 @@ namespace HappyHarvest
 					{
 						m_DayEventStates[index] = new DayEventState { Handler = state.Handler, EventIndex = state.EventIndex, WasInRange = false };
 					}
+
+					Debug.Log($"DayEvent '{dayEvent.Name}' OFF triggered at {CurrentDayRatio}");
 				}
 			}
 		}
@@ -337,4 +338,5 @@ namespace HappyHarvest
 			Debug.Log("Game Resumed");
 		}
 	}
+
 }
