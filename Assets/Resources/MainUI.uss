@@ -1,0 +1,273 @@
+/*
+ * Main Stylesheet for UI
+ */
+
+.root-container {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    /* Use a semi-transparent black background to ensure UI is visible over game world */
+    background-color: rgba(0, 0, 0, 0.2); 
+    -unity-font-definition: resource('Fonts/OpenSans-Regular SDF');
+    -unity-font-style: bold;
+}
+
+.full-screen-ui {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* --- Top Bar Styles --- */
+.top-bar-container {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+}
+
+.coin-counter-container {
+    flex-direction: row;
+    align-items: center;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 5px 15px;
+}
+
+.coin-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #FFD700; /* Gold color */
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.coin-amount-label {
+    color: white;
+    font-size: 24px;
+}
+
+.time-and-weather-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+}
+
+.timer-label {
+    color: white;
+    font-size: 24px;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 5px 15px;
+}
+
+.weather-controls {
+    flex-direction: row;
+    align-items: center;
+    background-color: #333;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.weather-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    -unity-text-align: middle-center;
+    border-radius: 5px;
+    transition-duration: 0.2s;
+    transition-property: background-color;
+    cursor: pointer;
+}
+
+.on-button {
+    background-color: #555;
+    color: #fff;
+    -unity-scale: 1.1;
+}
+
+.off-button {
+    background-color: transparent;
+    color: #999;
+    -unity-scale: 1.0;
+}
+
+/* --- Bottom Bar Styles --- */
+.bottom-bar-container {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+}
+
+.inventory-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    padding: 10px;
+    gap: 10px;
+}
+
+.inventory-entry {
+    width: 60px;
+    height: 60px;
+    background-color: #555;
+    border: 3px solid #777;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition-duration: 0.1s;
+    transition-property: border-color;
+}
+
+.inventory-entry:hover {
+    border-color: #fff;
+}
+
+.equipped {
+    border-color: #FFD700; /* Gold border for equipped item */
+    -unity-scale: 1.1;
+}
+
+.item-icon-wrapper {
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.item-icon {
+    width: 90%;
+    height: 90%;
+}
+
+.item-count-label {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    color: white;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 2px 5px;
+    border-radius: 5px;
+    -unity-text-align: middle-right;
+}
+
+/* --- Popup Styles --- */
+.popup-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    -unity-font-definition: resource('Fonts/OpenSans-Bold SDF');
+}
+
+.popup-panel {
+    width: 400px;
+    max-height: 80%;
+    background-color: #222;
+    border: 3px solid #777;
+    border-radius: 15px;
+    padding: 15px;
+}
+
+.popup-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.popup-title {
+    color: #fff;
+    font-size: 30px;
+}
+
+.close-button {
+    width: 40px;
+    height: 40px;
+    -unity-font-size: 24px;
+    -unity-text-align: middle-center;
+    background-color: #555;
+    color: #ddd;
+    border-radius: 5px;
+    border-width: 2px;
+    border-color: #777;
+    cursor: pointer;
+    transition-duration: 0.2s;
+}
+
+.close-button:hover {
+    background-color: #777;
+    color: white;
+}
+
+/* --- Market Specific Styles --- */
+.market-buttons-container {
+    flex-direction: row;
+    justify-content: space-around;
+    margin-bottom: 15px;
+}
+
+.market-button {
+    width: 45%;
+    height: 40px;
+    -unity-font-size: 18px;
+    color: #ddd;
+    background-color: #333;
+    border-width: 2px;
+    border-color: #555;
+    border-radius: 5px;
+}
+
+.market-button.activeButton {
+    background-color: #555;
+    border-color: #ddd;
+}
+
+.market-scrollview {
+    flex-grow: 1;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: #444;
+    padding: 10px;
+}
+
+.market-entry-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin-bottom: 5px;
+    background-color: #333;
+    border-radius: 8px;
+}
+
+.market-entry-item-info {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.market-action-button {
+    height: 30px;
+    -unity-font-size: 14px;
+    color: white;
+    background-color: #007bff;
+    border-radius: 5px;
+}
+
+/* Fade blocker */
