@@ -13,6 +13,6 @@ public class BlockDataScriptable : ScriptableObject
     public Sprite backgroundImage;
     public string resourceURL;
     [Tooltip("Size of the block, 1x1, 1x2.. a converter will change to pixel size")]
-    public Vector2Int blockSize = new Vector2Int(1, 1);
+    public Vector2Int blockSize = new Vector2Int(1,1);
 
 }

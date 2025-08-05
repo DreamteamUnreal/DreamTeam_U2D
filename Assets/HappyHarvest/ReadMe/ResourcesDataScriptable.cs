@@ -12,10 +12,9 @@ public class ResourcesDataScriptable : ScriptableObject
     [TextAreaAttribute]
     public string introText = "<b> ABOUT </b ><br> intro text";
     public List<BlockDataScriptable> infoBlock = new();
-
+    
 }
 
-
-
+    
 
 
