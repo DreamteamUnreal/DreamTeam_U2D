@@ -59,13 +59,13 @@ namespace HappyHarvest
 		private Animator m_Animator;
 
 		private InteractiveObject m_CurrentInteractiveTarget = null;
-		private Collider2D[] m_CollidersCache = new Collider2D[8];
+		private readonly Collider2D[] m_CollidersCache = new Collider2D[8];
 
-		private Dictionary<Item, ItemInstance> m_ItemVisualInstance = new();
+		private readonly Dictionary<Item, ItemInstance> m_ItemVisualInstance = new();
 
-		private int m_DirXHash = Animator.StringToHash("DirX");
-		private int m_DirYHash = Animator.StringToHash("DirY");
-		private int m_SpeedHash = Animator.StringToHash("Speed");
+		private readonly int m_DirXHash = Animator.StringToHash("DirX");
+		private readonly int m_DirYHash = Animator.StringToHash("DirY");
+		private readonly int m_SpeedHash = Animator.StringToHash("Speed");
 
 		void Awake()
 		{

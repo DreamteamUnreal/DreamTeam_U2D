@@ -32,7 +32,7 @@ namespace HappyHarvest
 		private bool m_IsIdle;
 
 		private Animator m_Animator;
-		private int SpeedHash = Animator.StringToHash("Speed");
+		private readonly int SpeedHash = Animator.StringToHash("Speed");
 
 		private void Start()
 		{

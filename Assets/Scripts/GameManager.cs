@@ -72,8 +72,8 @@ namespace HappyHarvest
 
 		private bool m_IsTicking;
 
-		private List<DayEventHandler> m_EventHandlers = new();
-		private List<SpawnPoint> m_ActiveTransitions = new List<SpawnPoint>();
+		private readonly List<DayEventHandler> m_EventHandlers = new();
+		private readonly List<SpawnPoint> m_ActiveTransitions = new List<SpawnPoint>();
 
 		private float m_CurrentTimeOfTheDay;
 

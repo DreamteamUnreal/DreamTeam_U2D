@@ -107,8 +107,8 @@ namespace HappyHarvest
 		private Dictionary<Vector3Int, GroundData> m_GroundData = new();
 		private Dictionary<Vector3Int, CropData> m_CropData = new();
 
-		private Dictionary<Crop, List<VisualEffect>> m_HarvestEffectPool = new();
-		private List<VisualEffect> m_TillingEffectPool = new();
+		private readonly Dictionary<Crop, List<VisualEffect>> m_HarvestEffectPool = new();
+		private readonly List<VisualEffect> m_TillingEffectPool = new();
 
 		public bool IsTillable(Vector3Int target)
 		{

@@ -46,8 +46,8 @@ namespace HappyHarvest
 		[Tooltip("The scale of the normal shadow length (0 to 1) along the day")]
 		public AnimationCurve ShadowLength;
 
-		private List<ShadowInstance> m_Shadows = new();
-		private List<LightInterpolator> m_LightBlenders = new();
+		private readonly List<ShadowInstance> m_Shadows = new();
+		private readonly List<LightInterpolator> m_LightBlenders = new();
 
 		private void Awake()
 		{

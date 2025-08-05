@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using Template2DCommon;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -11,14 +9,14 @@ namespace HappyHarvest
 	/// </summary>
 	public class WarehouseUI
 	{
-		private VisualElement m_Root;
+		private readonly VisualElement m_Root;
 
-		private VisualTreeAsset m_EntryTemplate;
+		private readonly VisualTreeAsset m_EntryTemplate;
 
-		private Button m_StoreButton;
-		private Button m_RetrieveButton;
+		private readonly Button m_StoreButton;
+		private readonly Button m_RetrieveButton;
 
-		private ScrollView m_Scrollview;
+		private readonly ScrollView m_Scrollview;
 
 		public WarehouseUI(VisualElement root, VisualTreeAsset entryTemplate)
 		{

@@ -10,20 +10,20 @@ namespace Template2DCommon
 		public System.Action OnClose;
 		public System.Action OnOpen;
 
-		private VisualElement m_Root;
-		private Button m_OpenMenu;
+		private readonly VisualElement m_Root;
+		private readonly Button m_OpenMenu;
 
-		private Button m_CloseButton;
-		private Button m_QuitButton;
+		private readonly Button m_CloseButton;
+		private readonly Button m_QuitButton;
 
-		private DropdownField m_ResolutionDropdown;
-		private Toggle m_FullscreenToggle;
+		private readonly DropdownField m_ResolutionDropdown;
+		private readonly Toggle m_FullscreenToggle;
 
-		private Slider m_MainVolumeSlider;
-		private Slider m_BGMVolumeSlider;
-		private Slider m_SFXVolumeSlider;
+		private readonly Slider m_MainVolumeSlider;
+		private readonly Slider m_BGMVolumeSlider;
+		private readonly Slider m_SFXVolumeSlider;
 
-		private List<Resolution> m_AvailableResolutions;
+		private readonly List<Resolution> m_AvailableResolutions;
 
 		public SettingMenu(VisualElement root)
 		{

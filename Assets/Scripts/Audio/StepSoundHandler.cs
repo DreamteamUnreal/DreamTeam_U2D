@@ -28,7 +28,7 @@ namespace HappyHarvest
 		public AudioClip[] DefaultStepSounds;
 		public TileSoundMapping[] SoundMappings;
 
-		private Dictionary<TileBase, AudioClip[]> m_Mapping = new();
+		private readonly Dictionary<TileBase, AudioClip[]> m_Mapping = new();
 
 		void Start()
 		{

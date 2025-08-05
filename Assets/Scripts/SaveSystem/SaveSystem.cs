@@ -25,7 +25,7 @@ namespace HappyHarvest
 			public TerrainDataSave TerrainData;
 		}
 
-		private static Dictionary<string, SceneData> s_ScenesDataLookup = new Dictionary<string, SceneData>();
+		private static readonly Dictionary<string, SceneData> s_ScenesDataLookup = new Dictionary<string, SceneData>();
 
 		public static void Save()
 		{
