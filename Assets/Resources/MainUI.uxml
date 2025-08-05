@@ -1,111 +1,115 @@
-<!-- MainUI.uxml -->
-<!-- This is the primary UXML file for the in-game UI. -->
-<!-- It defines the layout and structure for all the main HUD elements, -->
-<!-- including the inventory, coin counter, timer, weather icons, -->
-<!-- as well as the new crafting and game over menus. -->
+<!-- Main UI Document for Game -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" editor:ext-text-alignment="UpperCenter" class="root-container">
 
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" editor-extension-mode="False">
-    <ui:VisualElement name="Root" class="root">
-        <ui:VisualElement name="HUD" class="hud-container">
-            <!-- Header for the UI -->
-            <ui:VisualElement name="TopHeader" class="header-container">
-                <ui:VisualElement name="CoinSection" class="coin-section">
-                    <!-- This image is a placeholder for your coin icon -->
-                    <ui:VisualElement name="CoinIcon" class="icon" />
-                    <ui:Label name="CoinAmount" text="999" class="coin-amount" />
-                </ui:VisualElement>
-                <ui:VisualElement name="TimerSection" class="timer-section">
-                    <ui:Label name="Timer" text="00:00:00" class="timer-text" />
-                </ui:VisualElement>
-                <ui:VisualElement name="WeatherControl" class="weather-controls">
+    <!-- The main game overlay UI -->
+    <ui:VisualElement name="MainGameUI" class="full-screen-ui">
+
+        <!-- Top bar with timer, coins, and weather controls -->
+        <ui:VisualElement class="top-bar-container">
+            <ui:VisualElement class="coin-counter-container">
+                <ui:VisualElement class="coin-icon" />
+                <ui:Label name="CoinAmount" text="0" class="coin-amount-label" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="time-and-weather-container">
+                <ui:Label name="Timer" text="00:00" class="timer-label" />
+                
+                <!-- Weather control container -->
+                <ui:VisualElement class="weather-controls">
                     <ui:Label name="SunLabel" text="☀️" class="weather-icon off-button" />
                     <ui:Label name="RainLabel" text="🌧️" class="weather-icon off-button" />
-                    <ui:Label name="ThunderLabel" text="⚡" class="weather-icon off-button" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-
-            <!-- Inventory bar at the bottom of the screen -->
-            <ui:VisualElement name="InventoryBar" class="inventory-bar-container">
-                <!-- Each of these VisualElements represents an inventory slot -->
-                <ui:VisualElement name="InventoryEntry" class="inventory-slot">
-                    <ui:VisualElement name="ItemIcone" class="item-icon" />
-                    <ui:Label name="ItemCount" text="0" class="item-count" />
-                </ui:VisualElement>
-                <ui:VisualElement name="InventoryEntry" class="inventory-slot">
-                    <ui:VisualElement name="ItemIcone" class="item-icon" />
-                    <ui:Label name="ItemCount" text="0" class="item-count" />
-                </ui:VisualElement>
-                <ui:VisualElement name="InventoryEntry" class="inventory-slot">
-                    <ui:VisualElement name="ItemIcone" class="item-icon" />
-                    <ui:Label name="ItemCount" text="0" class="item-count" />
-                </ui:VisualElement>
-                <ui:VisualElement name="InventoryEntry" class="inventory-slot">
-                    <ui:VisualElement name="ItemIcone" class="item-icon" />
-                    <ui:Label name="ItemCount" text="0" class="item-count" />
-                </ui:VisualElement>
-                <ui:VisualElement name="InventoryEntry" class="inventory-slot">
-                    <ui:VisualElement name="ItemIcone" class="item-icon" />
-                    <ui:Label name="ItemCount" text="0" class="item-count" />
-                </ui:VisualElement>
-                <ui:VisualElement name="InventoryEntry" class="inventory-slot">
-                    <ui:VisualElement name="ItemIcone" class="item-icon" />
-                    <ui:Label name="ItemCount" text="0" class="item-count" />
+                    <ui:Label name="ThunderLabel" text="🌩️" class="weather-icon off-button" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- The main blocker for fade-in/fade-out effects -->
-        <ui:VisualElement name="Blocker" class="blocker" />
+        <!-- Bottom bar with inventory slots -->
+        <ui:VisualElement class="bottom-bar-container">
+            <ui:VisualElement name="Inventory" class="inventory-container">
+                <!-- Inventory slots will be queried by name/class "InventoryEntry" -->
+                <!-- The script expects 8 of these. -->
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry equipped">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="InventoryEntry" class="inventory-entry">
+                    <ui:VisualElement class="item-icon-wrapper">
+                        <ui:VisualElement name="ItemIcon" class="item-icon" />
+                    </ui:VisualElement>
+                    <ui:Label name="ItemCount" text="99" class="item-count-label" style="visibility: hidden;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
 
-        <!-- Market and Warehouse popups -->
-        <ui:VisualElement name="MarketPopup" class="modal-popup" style="display: none;">
-            <ui:VisualElement name="PopupBackground" class="popup-background">
+    </ui:VisualElement>
+
+    <!-- Market Popup UI (Initially hidden) -->
+    <ui:VisualElement name="MarketPopup" class="popup-container">
+        <ui:VisualElement class="popup-panel">
+            <ui:VisualElement class="popup-header">
                 <ui:Label text="Market" class="popup-title" />
-                <ui:VisualElement name="MarketButtons" class="market-buttons">
-                    <ui:Button name="BuyButton" text="Buy" class="button market-button" />
-                    <ui:Button name="SellButton" text="Sell" class="button market-button" />
-                </ui:VisualElement>
-                <ui:ScrollView name="ContentScrollView" class="popup-content-scrollview" />
                 <ui:Button name="CloseButton" text="X" class="close-button" />
             </ui:VisualElement>
-        </ui:VisualElement>
 
-        <ui:VisualElement name="WarehousePopup" class="modal-popup" style="display: none;">
-            <ui:VisualElement name="PopupBackground" class="popup-background">
-                <ui:Label text="Warehouse" class="popup-title" />
-                <ui:ScrollView name="WarehouseScrollView" class="popup-content-scrollview" />
-                <ui:Button name="CloseButton" text="X" class="close-button" />
+            <ui:VisualElement class="market-buttons-container">
+                <ui:Button name="BuyButton" text="Buy" class="market-button activeButton" />
+                <ui:Button name="SellButton" text="Sell" class="market-button" />
             </ui:VisualElement>
-        </ui:VisualElement>
 
-        <!-- New: Crafting/Pie-making popup -->
-        <ui:VisualElement name="CraftingPopup" class="modal-popup" style="display: none;">
-            <ui:VisualElement name="PopupBackground" class="popup-background">
-                <ui:Label text="Crafting" class="popup-title" />
-                <ui:ScrollView name="CraftingScrollView" class="popup-content-scrollview">
-                    <ui:Label text="Recipes go here." />
-                </ui:ScrollView>
-                <ui:Button name="CloseButton" text="X" class="close-button" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-        <!-- The main menu/settings screen. We'll use this to access the Game Over screen. -->
-        <ui:VisualElement name="SettingMenu" class="modal-popup" style="display: none;">
-            <ui:VisualElement name="PopupBackground" class="popup-background">
-                <ui:Label text="Settings" class="popup-title" />
-                <ui:Button name="ResumeButton" text="Resume" class="button popup-button" />
-                <ui:Button name="ExitButton" text="Exit" class="button popup-button" />
-                <ui:Button name="GameOverButton" text="Game Over" class="button popup-button" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-        <!-- New: Game Over screen -->
-        <ui:VisualElement name="GameOverScreen" class="game-over-screen" style="display: none;">
-            <ui:VisualElement name="GameOverPanel" class="game-over-panel">
-                <ui:Label text="Game Over" class="game-over-title" />
-                <ui:Label text="Your Journey Has Ended" class="game-over-subtitle" />
-                <ui:Button name="RestartButton" text="Restart Game" class="button game-over-button" />
-            </ui:VisualElement>
+            <ui:ScrollView name="ContentScrollView" class="market-scrollview" />
         </ui:VisualElement>
     </ui:VisualElement>
+
+    <!-- Warehouse Popup UI (Initially hidden) -->
+    <ui:VisualElement name="WarehousePopup" class="popup-container">
+        <!-- This popup would have a similar structure to the market, but with different content -->
+        <ui:VisualElement class="popup-panel">
+            <ui:VisualElement class="popup-header">
+                <ui:Label text="Warehouse" class="popup-title" />
+                <ui:Button name="WarehouseCloseButton" text="X" class="close-button" />
+            </ui:VisualElement>
+            <ui:Label text="Warehouse content goes here..." class="filler-content" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- Fade to black blocker (initially transparent, or opaque for initial fade in) -->
+    <ui:VisualElement name="Blocker" class="blocker" />
 </ui:UXML>

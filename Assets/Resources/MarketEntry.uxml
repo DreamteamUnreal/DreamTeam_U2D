@@ -1,0 +1,10 @@
+<!-- Market Entry -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" class="market-entry-template">
+    <ui:VisualElement class="market-entry-row">
+        <ui:VisualElement class="market-entry-item-info">
+            <ui:VisualElement name="ItemIcone" class="item-icon" />
+            <ui:Label name="ItemName" text="Item Name" class="item-name-label" />
+        </ui:VisualElement>
+        <ui:Button name="ActionButton" text="Action" class="market-action-button" />
+    </ui:VisualElement>
+</ui:UXML>
