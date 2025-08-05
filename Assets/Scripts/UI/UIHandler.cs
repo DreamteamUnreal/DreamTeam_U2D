@@ -15,7 +15,8 @@ namespace HappyHarvest
 	/// </summary>
 	public class UIHandler : MonoBehaviour
 	{
-		protected static UIHandler s_Instance; // Singleton instance
+		// Changed to public for easier debugging of the singleton instance
+		public static UIHandler Instance { get; private set; } // Singleton instance
 
 		public enum CursorType
 		{
@@ -30,8 +31,8 @@ namespace HappyHarvest
 
 		[Header("UI Document")]
 		// These are the UXML and USS assets you will link in the Inspector
-		public VisualTreeAsset MarketEntryTemplate; // UXML template for market items
-		public VisualTreeAsset CraftingEntryTemplate; // UXML template for crafting recipes (if you have one)
+		public VisualTreeAsset MarketEntryTemplate;
+		public VisualTreeAsset CraftingEntryTemplate; // Ensure this is assigned in Inspector if used
 
 		[Header("Sounds")]
 		public AudioClip MarketSellSound;
@@ -39,12 +40,11 @@ namespace HappyHarvest
 
 		protected UIDocument m_Document;
 
-		// UI Element references
 		protected List<VisualElement> m_InventorySlots;
 		protected List<Label> m_ItemCountLabels;
 		protected Label m_CointCounter;
 		protected VisualElement m_MarketPopup;
-		protected ScrollView m_MarketContentScrollview; // Changed to ScrollView for clarity
+		protected ScrollView m_MarketContentScrollview;
 		protected Label m_TimerLabel;
 		protected Button m_BuyButton;
 		protected Button m_SellButton;
@@ -52,54 +52,60 @@ namespace HappyHarvest
 		protected bool m_HaveFocus = true;
 		protected CursorType m_CurrentCursorType;
 
-		// Settings and menus
-		protected VisualElement m_SettingMenu; // Changed from a custom class to VisualElement
-		protected VisualElement m_GameOverScreen; // New: Game Over screen
-		protected VisualElement m_CraftingPopup; // New: Crafting menu
-		protected ScrollView m_CraftingScrollView; // New: ScrollView for crafting recipes
+		protected VisualElement m_SettingMenu;
+		protected VisualElement m_GameOverScreen;
+		protected VisualElement m_CraftingPopup;
+		protected ScrollView m_CraftingScrollView;
 
-		protected WarehouseUI m_WarehouseUI; // Assuming this is a custom class that manages a VisualElement
+		protected WarehouseUI m_WarehouseUI; // Assuming this is a custom class
 
-		// Fade to black helper
 		protected VisualElement m_Blocker;
 		protected System.Action m_FadeFinishClbk;
 
-		// Weather icons
 		private Label m_SunLabel;
 		private Label m_RainLabel;
 		private Label m_ThunderLabel;
-		private Button m_SettingsButton; // Assuming a menu button exists somewhere to open settings
+		private Button m_SettingsButton; // Button to open the settings menu (e.g., "MenuButton" in UXML)
 
 		private void Awake()
 		{
-			s_Instance = this; // Set singleton instance
+			// Ensure only one instance exists
+			if (Instance != null && Instance != this)
+			{
+				Debug.LogWarning("UIHandler: Destroying duplicate UIHandler instance.");
+				Destroy(gameObject);
+				return;
+			}
+			Instance = this; // Assign singleton instance
 
 			m_Document = GetComponent<UIDocument>();
 
-			// CRITICAL: Check if UIDocument is found and its root is valid
 			if (m_Document == null)
 			{
-				Debug.LogError("UIHandler: UIDocument component not found on this GameObject. UI will not function. Please add a UIDocument component.");
-				enabled = false; // Disable this component to prevent further errors
-				return;
-			}
-			if (m_Document.rootVisualElement == null)
-			{
-				Debug.LogError("UIHandler: UIDocument's rootVisualElement is null. Is the UXML asset assigned to the UIDocument's 'Source Asset' field?");
+				Debug.LogError("UIHandler: UIDocument component not found on this GameObject. UI will not function.");
 				enabled = false;
 				return;
 			}
 
-			// Query UI elements by name
+			// Important: Check rootVisualElement after a short delay if it's not immediately available
+			// This can sometimes happen if the UXML parsing isn't fully complete in the same frame as Awake.
+			// However, the Script Execution Order is the more robust fix.
+			if (m_Document.rootVisualElement == null)
+			{
+				Debug.LogError("UIHandler: UIDocument's rootVisualElement is null in Awake. Is the UXML asset assigned to the UIDocument's 'Source Asset' field? Disabling UIHandler.");
+				enabled = false;
+				return;
+			}
+
+			// Query UI elements
 			m_InventorySlots = m_Document.rootVisualElement.Query<VisualElement>("InventoryEntry").ToList();
 			m_ItemCountLabels = m_Document.rootVisualElement.Query<Label>("ItemCount").ToList();
 
 			// Setup Inventory Slot click handlers
 			for (int i = 0; i < m_InventorySlots.Count; ++i)
 			{
-				int i1 = i; // Capture loop variable for closure
-							// The `Clickable` class here is assumed to exist in your project.
-							// If it doesn't, you might need to use RegisterCallback<ClickEvent>
+				int i1 = i;
+				// Assuming 'Clickable' is from Template2DCommon. If not, replace with .RegisterCallback<ClickEvent>
 				m_InventorySlots[i].AddManipulator(new Clickable(() =>
 				{
 					if (GameManager.Instance != null && GameManager.Instance.Player != null)
@@ -108,23 +114,26 @@ namespace HappyHarvest
 					}
 					else
 					{
-						Debug.LogWarning("UIHandler: GameManager or Player is null when attempting to change equip item. Check Script Execution Order.");
+						Debug.LogWarning("UIHandler: GameManager or Player is null when changing equip item.");
 					}
 				}));
 			}
 
-			if (m_InventorySlots.Count != InventorySystem.InventorySize)
+			// Check inventory slot count consistency
+			// This check should ideally be done after InventorySystem is fully initialized if its size is dynamic.
+			// For now, assuming InventorySystem.InventorySize is a reliable constant.
+			if (InventorySystem.InventorySize != m_InventorySlots.Count)
 			{
 				Debug.LogWarning($"UIHandler: Inventory system size ({InventorySystem.InventorySize}) does not match the number of 'InventoryEntry' elements in UXML ({m_InventorySlots.Count}). Please ensure they match.");
 			}
 
-
 			m_CointCounter = m_Document.rootVisualElement.Q<Label>("CoinAmount");
 			if (m_CointCounter == null)
 			{
-				Debug.LogWarning("UIHandler: 'CoinAmount' label not found in UXML.");
+				Debug.LogWarning("UIHandler: 'CoinAmount' label not found.");
 			}
 
+			// Market Popup setup
 			m_MarketPopup = m_Document.rootVisualElement.Q<VisualElement>("MarketPopup");
 			if (m_MarketPopup != null)
 			{
@@ -138,7 +147,7 @@ namespace HappyHarvest
 					Debug.LogWarning("UIHandler: 'CloseButton' not found in 'MarketPopup'.");
 				}
 
-				m_MarketPopup.style.display = DisplayStyle.None; // Initially hide market popup
+				m_MarketPopup.style.display = DisplayStyle.None; // Hide by default
 
 				m_BuyButton = m_MarketPopup.Q<Button>("BuyButton");
 				if (m_BuyButton != null)
@@ -168,16 +177,16 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'MarketPopup' VisualElement not found in UXML.");
+				Debug.LogWarning("UIHandler: 'MarketPopup' not found in UXML.");
 			}
 
 			m_TimerLabel = m_Document.rootVisualElement.Q<Label>("Timer");
 			if (m_TimerLabel == null)
 			{
-				Debug.LogWarning("UIHandler: 'Timer' label not found in UXML.");
+				Debug.LogWarning("UIHandler: 'Timer' label not found.");
 			}
 
-			// Initialize SettingMenu, CraftingPopup, and GameOverScreen from UXML
+			// Settings Menu setup
 			m_SettingMenu = m_Document.rootVisualElement.Q<VisualElement>("SettingMenu");
 			if (m_SettingMenu != null)
 			{
@@ -199,23 +208,24 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'SettingMenu' VisualElement not found in UXML.");
+				Debug.LogWarning("UIHandler: 'SettingMenu' not found in UXML.");
 			}
 
+			// Crafting Popup setup
 			m_CraftingPopup = m_Document.rootVisualElement.Q<VisualElement>("CraftingPopup");
 			if (m_CraftingPopup != null)
 			{
 				m_CraftingPopup.Q<Button>("CloseButton").clicked += CloseCraftingMenu;
 				m_CraftingScrollView = m_CraftingPopup.Q<ScrollView>("CraftingScrollView");
 				m_CraftingPopup.style.display = DisplayStyle.None; // Hide by default
-																   // If you have a dedicated button to open crafting, link it here:
 																   // m_Document.rootVisualElement.Q<Button>("CraftingButton").clicked += OpenCraftingMenu;
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'CraftingPopup' VisualElement not found in UXML.");
+				Debug.LogWarning("UIHandler: 'CraftingPopup' not found in UXML.");
 			}
 
+			// Game Over Screen setup
 			m_GameOverScreen = m_Document.rootVisualElement.Q<VisualElement>("GameOverScreen");
 			if (m_GameOverScreen != null)
 			{
@@ -228,11 +238,11 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'GameOverScreen' VisualElement not found in UXML.");
+				Debug.LogWarning("UIHandler: 'GameOverScreen' not found in UXML.");
 			}
 
 
-			// Initialize WarehouseUI
+			// Warehouse UI setup (assuming WarehouseUI is a class that takes a VisualElement and template)
 			VisualElement warehousePopup = m_Document.rootVisualElement.Q<VisualElement>("WarehousePopup");
 			if (warehousePopup != null)
 			{
@@ -242,7 +252,6 @@ namespace HappyHarvest
 				}
 				else
 				{
-					// Assuming WarehouseUI constructor takes a VisualElement and a VisualTreeAsset
 					m_WarehouseUI = new WarehouseUI(warehousePopup, MarketEntryTemplate);
 				}
 			}
@@ -251,7 +260,7 @@ namespace HappyHarvest
 				Debug.LogWarning("UIHandler: 'WarehousePopup' not found in UXML. Warehouse UI might not function.");
 			}
 
-			// Initialize Blocker for fade effects
+			// Blocker setup
 			m_Blocker = m_Document.rootVisualElement.Q<VisualElement>("Blocker");
 			if (m_Blocker != null)
 			{
@@ -260,10 +269,10 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'Blocker' VisualElement not found in UXML. Fade effects will not work.");
+				Debug.LogWarning("UIHandler: 'Blocker' not found in UXML. Fade effects will not work.");
 			}
 
-			// Initialize Weather Labels and their click handlers
+			// Weather labels setup
 			m_SunLabel = m_Document.rootVisualElement.Q<Label>("SunLabel");
 			if (m_SunLabel != null)
 			{
@@ -271,7 +280,7 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'SunLabel' not found in UXML.");
+				Debug.LogWarning("UIHandler: 'SunLabel' not found.");
 			}
 
 			m_RainLabel = m_Document.rootVisualElement.Q<Label>("RainLabel");
@@ -281,7 +290,7 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'RainLabel' not found in UXML.");
+				Debug.LogWarning("UIHandler: 'RainLabel' not found.");
 			}
 
 			m_ThunderLabel = m_Document.rootVisualElement.Q<Label>("ThunderLabel");
@@ -291,16 +300,22 @@ namespace HappyHarvest
 			}
 			else
 			{
-				Debug.LogWarning("UIHandler: 'ThunderLabel' not found in UXML.");
+				Debug.LogWarning("UIHandler: 'ThunderLabel' not found.");
 			}
 		}
 
 		private void Start()
 		{
 			// Perform initial fade from black after all Awake methods have run
-			if (m_Blocker != null)
+			// Check s_Instance explicitly before using it in a static call, though it should be set by now.
+			if (Instance != null && Instance.m_Blocker != null)
 			{
 				FadeFromBlack(() => { Debug.Log("Initial fade from black complete."); });
+			}
+			else
+			{
+				// This warning indicates the Script Execution Order is likely incorrect for UIHandler.
+				Debug.LogWarning("UIHandler Start: Cannot perform initial fade. UIHandler.s_Instance or m_Blocker is null. Check Script Execution Order.");
 			}
 
 			// Initial UI updates that rely on GameManager/Player
@@ -349,9 +364,9 @@ namespace HappyHarvest
 
 		public static void UpdateInventory(InventorySystem system)
 		{
-			if (s_Instance != null)
+			if (Instance != null)
 			{
-				s_Instance.UpdateInventory_Internal(system);
+				Instance.UpdateInventory_Internal(system);
 			}
 			else
 			{
@@ -361,9 +376,9 @@ namespace HappyHarvest
 
 		public static void UpdateCoins(int amount)
 		{
-			if (s_Instance != null && s_Instance.m_CointCounter != null)
+			if (Instance != null && Instance.m_CointCounter != null)
 			{
-				s_Instance.UpdateCoins_Internal(amount);
+				Instance.UpdateCoins_Internal(amount);
 			}
 			else
 			{
@@ -373,9 +388,9 @@ namespace HappyHarvest
 
 		public static void OpenMarket()
 		{
-			if (s_Instance != null)
+			if (Instance != null)
 			{
-				s_Instance.OpenMarket_Internal();
+				Instance.OpenMarket_Internal();
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Pause();
@@ -389,11 +404,14 @@ namespace HappyHarvest
 
 		public static void CloseMarket()
 		{
-			if (s_Instance != null && s_Instance.m_MarketPopup != null)
+			if (Instance != null && Instance.m_MarketPopup != null)
 			{
-				SoundManager.Instance?.PlayUISound();
+				if (SoundManager.Instance != null)
+				{
+					SoundManager.Instance.PlayUISound();
+				}
 
-				s_Instance.m_MarketPopup.style.display = DisplayStyle.None;
+				Instance.m_MarketPopup.style.display = DisplayStyle.None;
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Resume();
@@ -407,9 +425,9 @@ namespace HappyHarvest
 
 		public static void OpenWarehouse()
 		{
-			if (s_Instance != null && s_Instance.m_WarehouseUI != null)
+			if (Instance != null && Instance.m_WarehouseUI != null)
 			{
-				s_Instance.m_WarehouseUI.Open();
+				Instance.m_WarehouseUI.Open();
 			}
 			else
 			{
@@ -417,12 +435,11 @@ namespace HappyHarvest
 			}
 		}
 
-		// New: Methods to handle the crafting menu
 		public static void OpenCraftingMenu()
 		{
-			if (s_Instance != null && s_Instance.m_CraftingPopup != null)
+			if (Instance != null && Instance.m_CraftingPopup != null)
 			{
-				s_Instance.OpenCraftingMenu_Internal();
+				Instance.OpenCraftingMenu_Internal();
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Pause();
@@ -436,9 +453,9 @@ namespace HappyHarvest
 
 		public static void CloseCraftingMenu()
 		{
-			if (s_Instance != null && s_Instance.m_CraftingPopup != null)
+			if (Instance != null && Instance.m_CraftingPopup != null)
 			{
-				s_Instance.m_CraftingPopup.style.display = DisplayStyle.None;
+				Instance.m_CraftingPopup.style.display = DisplayStyle.None;
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Resume();
@@ -450,12 +467,11 @@ namespace HappyHarvest
 			}
 		}
 
-		// New: Methods to handle the settings menu
 		public static void OpenSettingMenu()
 		{
-			if (s_Instance != null && s_Instance.m_SettingMenu != null)
+			if (Instance != null && Instance.m_SettingMenu != null)
 			{
-				s_Instance.m_SettingMenu.style.display = DisplayStyle.Flex;
+				Instance.m_SettingMenu.style.display = DisplayStyle.Flex;
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Pause();
@@ -469,9 +485,9 @@ namespace HappyHarvest
 
 		public static void CloseSettingMenu()
 		{
-			if (s_Instance != null && s_Instance.m_SettingMenu != null)
+			if (Instance != null && Instance.m_SettingMenu != null)
 			{
-				s_Instance.m_SettingMenu.style.display = DisplayStyle.None;
+				Instance.m_SettingMenu.style.display = DisplayStyle.None;
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Resume();
@@ -483,12 +499,11 @@ namespace HappyHarvest
 			}
 		}
 
-		// New: Method to open the game over screen
 		public static void OpenGameOverScreen()
 		{
-			if (s_Instance != null && s_Instance.m_GameOverScreen != null)
+			if (Instance != null && Instance.m_GameOverScreen != null)
 			{
-				s_Instance.m_GameOverScreen.style.display = DisplayStyle.Flex;
+				Instance.m_GameOverScreen.style.display = DisplayStyle.Flex;
 				if (GameManager.Instance != null)
 				{
 					GameManager.Instance.Pause();
@@ -500,23 +515,22 @@ namespace HappyHarvest
 			}
 		}
 
-
 		public static void ChangeCursor(CursorType cursorType)
 		{
-			if (s_Instance == null)
+			if (Instance == null)
 			{
 				return;
 			}
 
-			if (s_Instance.m_HaveFocus)
+			if (Instance.m_HaveFocus)
 			{
 				switch (cursorType)
 				{
 					case CursorType.Interact:
-						Cursor.SetCursor(s_Instance.InteractCursor, Vector2.zero, CursorMode.Auto);
+						Cursor.SetCursor(Instance.InteractCursor, Vector2.zero, CursorMode.Auto);
 						break;
 					case CursorType.Normal:
-						Cursor.SetCursor(s_Instance.NormalCursor, Vector2.zero, CursorMode.Auto);
+						Cursor.SetCursor(Instance.NormalCursor, Vector2.zero, CursorMode.Auto);
 						break;
 					case CursorType.System:
 						Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
@@ -525,66 +539,66 @@ namespace HappyHarvest
 						break;
 				}
 			}
-			s_Instance.m_CurrentCursorType = cursorType;
+			Instance.m_CurrentCursorType = cursorType;
 		}
 
 		public static void UpdateWeatherIcons(WeatherSystem.WeatherType currentWeather)
 		{
-			if (s_Instance == null)
+			if (Instance == null)
 			{
 				return;
 			}
 
-			s_Instance.m_SunLabel?.EnableInClassList("on-button", currentWeather == WeatherSystem.WeatherType.Sun);
-			s_Instance.m_RainLabel?.EnableInClassList("on-button", currentWeather == WeatherSystem.WeatherType.Rain);
-			s_Instance.m_ThunderLabel?.EnableInClassList("on-button", currentWeather == WeatherSystem.WeatherType.Thunder);
+			Instance.m_SunLabel?.EnableInClassList("on-button", currentWeather == WeatherSystem.WeatherType.Sun);
+			Instance.m_RainLabel?.EnableInClassList("on-button", currentWeather == WeatherSystem.WeatherType.Rain);
+			Instance.m_ThunderLabel?.EnableInClassList("on-button", currentWeather == WeatherSystem.WeatherType.Thunder);
 
-			s_Instance.m_SunLabel?.EnableInClassList("off-button", currentWeather != WeatherSystem.WeatherType.Sun);
-			s_Instance.m_RainLabel?.EnableInClassList("off-button", currentWeather != WeatherSystem.WeatherType.Rain);
-			s_Instance.m_ThunderLabel?.EnableInClassList("off-button", currentWeather != WeatherSystem.WeatherType.Thunder);
+			Instance.m_SunLabel?.EnableInClassList("off-button", currentWeather != WeatherSystem.WeatherType.Sun);
+			Instance.m_RainLabel?.EnableInClassList("off-button", currentWeather != WeatherSystem.WeatherType.Rain);
+			Instance.m_ThunderLabel?.EnableInClassList("off-button", currentWeather != WeatherSystem.WeatherType.Thunder);
 		}
 
 		public static void SceneLoaded()
 		{
-			if (s_Instance == null)
+			if (Instance == null)
 			{
 				return;
 			}
 
-			if (s_Instance.m_SunLabel != null && s_Instance.m_SunLabel.parent != null)
+			if (Instance.m_SunLabel != null && Instance.m_SunLabel.parent != null)
 			{
-				s_Instance.m_SunLabel.parent.style.display =
+				Instance.m_SunLabel.parent.style.display =
 					GameManager.Instance.WeatherSystem == null ? DisplayStyle.None : DisplayStyle.Flex;
 			}
 		}
 
 		public static void FadeToBlack(System.Action onFinished)
 		{
-			if (s_Instance == null || s_Instance.m_Blocker == null)
+			if (Instance == null || Instance.m_Blocker == null)
 			{
 				Debug.LogWarning("UIHandler.FadeToBlack: s_Instance or m_Blocker is null. Fade skipped.");
 				onFinished?.Invoke();
 				return;
 			}
 
-			s_Instance.m_FadeFinishClbk = onFinished;
-			s_Instance.m_Blocker.style.transitionDuration = new List<TimeValue> { new(0.5f, TimeUnit.Second) };
-			s_Instance.m_Blocker.style.opacity = 1.0f;
+			Instance.m_FadeFinishClbk = onFinished;
+			Instance.m_Blocker.style.transitionDuration = new List<TimeValue> { new(0.5f, TimeUnit.Second) };
+			Instance.m_Blocker.style.opacity = 1.0f;
 			Debug.Log("UIHandler: Fading to black.");
 		}
 
 		public static void FadeFromBlack(System.Action onFinished)
 		{
-			if (s_Instance == null || s_Instance.m_Blocker == null)
+			if (Instance == null || Instance.m_Blocker == null)
 			{
 				Debug.LogWarning("UIHandler.FadeFromBlack: s_Instance or m_Blocker is null. Fade skipped.");
 				onFinished?.Invoke();
 				return;
 			}
 
-			s_Instance.m_FadeFinishClbk = onFinished;
-			s_Instance.m_Blocker.style.transitionDuration = new List<TimeValue> { new(0.5f, TimeUnit.Second) };
-			s_Instance.m_Blocker.style.opacity = 0.0f;
+			Instance.m_FadeFinishClbk = onFinished;
+			Instance.m_Blocker.style.transitionDuration = new List<TimeValue> { new(0.5f, TimeUnit.Second) };
+			Instance.m_Blocker.style.opacity = 0.0f;
 			Debug.Log("UIHandler: Fading from black.");
 		}
 
@@ -613,7 +627,6 @@ namespace HappyHarvest
 			}
 
 			m_CraftingPopup.style.display = DisplayStyle.Flex;
-			// Populate with recipes
 			PopulateCraftingMenu();
 			if (GameManager.Instance != null && GameManager.Instance.Player != null)
 			{
@@ -630,11 +643,8 @@ namespace HappyHarvest
 
 			m_CraftingScrollView.contentContainer.Clear();
 
-			// Example of a single pie recipe. You would expand this logic for more recipes.
-			// You will need a 'Pie' item and a 'Flour' item defined in your project.
 			if (CraftingEntryTemplate != null)
 			{
-				// Iterate through known recipes from GameManager.Instance.Player.CraftingManager
 				if (GameManager.Instance?.Player?.CraftingManager?.KnownRecipes != null)
 				{
 					foreach (RecipeData recipe in GameManager.Instance.Player.CraftingManager.KnownRecipes)
@@ -642,22 +652,18 @@ namespace HappyHarvest
 						TemplateContainer recipeClone = CraftingEntryTemplate.CloneTree();
 						recipeClone.Q<Label>("RecipeName").text = recipe.RecipeName;
 
-						// Display ingredients
 						VisualElement ingredientsContainer = recipeClone.Q<VisualElement>("IngredientsContainer");
 						if (ingredientsContainer != null)
 						{
 							ingredientsContainer.Clear();
 							foreach (RecipeData.Ingredient ingredient in recipe.Ingredients)
 							{
-								// You might need a small UXML template for individual ingredients too
-								// For simplicity, just add labels here
 								Label ingredientLabel = new($"{ingredient.Quantity}x {ingredient.Item?.DisplayName ?? "Unknown Item"}");
 								ingredientLabel.style.color = Color.white;
 								ingredientsContainer.Add(ingredientLabel);
 							}
 						}
 
-						// Display product
 						VisualElement productContainer = recipeClone.Q<VisualElement>("ProductContainer");
 						productContainer?.Clear();
 
@@ -665,7 +671,6 @@ namespace HappyHarvest
 						Button craftButton = recipeClone.Q<Button>("CraftButton");
 						craftButton.text = "Craft";
 
-						// Check if player can craft this recipe
 						if (GameManager.Instance.Player.CraftingManager.CanCraft(recipe))
 						{
 							craftButton.SetEnabled(true);
@@ -681,7 +686,7 @@ namespace HappyHarvest
 											SoundManager.Instance.PlaySFXAt(PieCraftSound, Vector3.zero);
 										}
 
-										PopulateCraftingMenu(); // Refresh the list to reflect new inventory
+										PopulateCraftingMenu();
 									}
 									else
 									{
@@ -742,7 +747,6 @@ namespace HappyHarvest
 				TemplateContainer clone = MarketEntryTemplate.CloneTree();
 
 				clone.Q<Label>("ItemName").text = item.DisplayName;
-				// Corrected: Query for the specific ItemIcon VisualElement within the clone
 				clone.Q<VisualElement>("ItemIcon").style.backgroundImage = new StyleBackground(item.ItemSprite);
 
 
@@ -753,13 +757,12 @@ namespace HappyHarvest
 					int count = GameManager.Instance.Player.Inventory.Entries[i].StackSize;
 					button.text = $"Sell {count} for {product.SellPrice * count}";
 
-					int i1 = i; // Capture for closure
+					int i1 = i;
 					button.clicked += () =>
 					{
 						if (GameManager.Instance != null && GameManager.Instance.Player != null)
 						{
 							GameManager.Instance.Player.SellItem(i1, count);
-							// Re-toggle to sell to refresh list as inventory might have changed
 							ToggleToSell();
 						}
 					};
@@ -769,7 +772,7 @@ namespace HappyHarvest
 					button.SetEnabled(false);
 					button.text = "Cannot Sell";
 				}
-				m_MarketContentScrollview.Add(clone); // Add the TemplateContainer directly
+				m_MarketContentScrollview.Add(clone);
 			}
 		}
 
@@ -804,7 +807,6 @@ namespace HappyHarvest
 				TemplateContainer clone = MarketEntryTemplate.CloneTree();
 
 				clone.Q<Label>("ItemName").text = item.DisplayName;
-				// Corrected: Query for the specific ItemIcon VisualElement within the clone
 				clone.Q<VisualElement>("ItemIcon").style.backgroundImage = new StyleBackground(item.ItemSprite);
 
 				Button button = clone.Q<Button>("ActionButton");
@@ -812,14 +814,13 @@ namespace HappyHarvest
 				if (GameManager.Instance.Player.Coins >= item.BuyPrice && GameManager.Instance.Player.CanFitInInventory(item, 1))
 				{
 					button.text = $"Buy 1 for {item.BuyPrice}";
-					int i1 = i; // Capture for closure
+					int i1 = i;
 					button.clicked += () =>
 					{
 						if (GameManager.Instance != null && GameManager.Instance.Player != null)
 						{
 							if (GameManager.Instance.Player.BuyItem(item))
 							{
-								// If bought, refresh the buy list to update affordability/capacity
 								ToggleToBuy();
 							}
 						}
@@ -838,7 +839,7 @@ namespace HappyHarvest
 						button.text = "Inventory Full";
 					}
 				}
-				m_MarketContentScrollview.Add(clone); // Add the TemplateContainer directly
+				m_MarketContentScrollview.Add(clone);
 			}
 		}
 
@@ -859,7 +860,6 @@ namespace HappyHarvest
 
 			for (int i = 0; i < system.Entries.Length; ++i)
 			{
-				// Ensure index is within bounds for UI elements
 				if (i >= m_InventorySlots.Count || i >= m_ItemCountLabels.Count)
 				{
 					Debug.LogWarning($"UIHandler: Inventory slot index {i} out of bounds for UI elements. Check UXML 'InventoryEntry' count.");
@@ -867,7 +867,6 @@ namespace HappyHarvest
 				}
 
 				Item item = system.Entries[i].Item;
-				// FIX: Correctly query for the nested ItemIcon VisualElement by its name
 				VisualElement itemIconElement = m_InventorySlots[i].Q<VisualElement>("ItemIcon");
 				if (itemIconElement != null)
 				{
@@ -878,6 +877,7 @@ namespace HappyHarvest
 				{
 					Debug.LogWarning($"UIHandler: 'ItemIcon' VisualElement not found inside InventoryEntry {i}.");
 				}
+
 
 				if (item == null || system.Entries[i].StackSize < 2)
 				{
