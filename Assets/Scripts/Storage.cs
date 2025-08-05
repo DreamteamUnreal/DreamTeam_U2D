@@ -1,4 +1,4 @@
-//Storage.cs
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,22 +6,30 @@ namespace HappyHarvest
 {
 	public class Storage
 	{
-		public List<InventorySlot> Content { get; private set; }
+		public List<InventorySystem.InventoryEntry> Content { get; private set; }
 
 		public Storage()
 		{
-			Content = new List<InventorySlot>();
+			Content = new List<InventorySystem.InventoryEntry>();
 		}
 
-		public void Store(InventorySlot entry)
+		public void Store(InventorySystem.InventoryEntry entry)
 		{
 			//we won't have thousands of objects types stored, so there should be no performance problem on simply searching
 			//for the key. But as usual : profile. If profiling show this to be massively underperformant, switch over to a
 			//lookup data format like Dictionary.
-			int idx = Content.FindIndex(inventoryEntry => inventoryEntry.Item.Key == entry.Item.Key);
+			var idx = Content.FindIndex(inventoryEntry => inventoryEntry.Item.Key == entry.Item.Key);
 			if (idx != -1)
 			{
 				Content[idx].StackSize += entry.StackSize;
+			}
+			else
+			{
+				Content.Add(new InventorySystem.InventoryEntry()
+				{
+					Item = entry.Item,
+					StackSize = entry.StackSize
+				});
 			}
 		}
 

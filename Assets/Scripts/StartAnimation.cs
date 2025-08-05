@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HappyHarvest
@@ -8,7 +10,7 @@ namespace HappyHarvest
 
 		public void Trigger()
 		{
-			_ = Animation.Play();
+			Animation.Play();
 		}
 	}
 }

@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 259218
   packageName: Happy Harvest - 2D Sample Project
   packageVersion: 1.61
-  assetPath: Assets/HappyHarvest/Scripts/Items/Basket.cs
+  assetPath: Assets/Scripts/Items/Basket.cs
   uploadId: 722366

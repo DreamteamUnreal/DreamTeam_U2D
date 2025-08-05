@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using HappyHarvest;
 using Template2DCommon;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -26,13 +28,13 @@ namespace HappyHarvest
 		public AudioClip[] DefaultStepSounds;
 		public TileSoundMapping[] SoundMappings;
 
-		private readonly Dictionary<TileBase, AudioClip[]> m_Mapping = new();
+		private Dictionary<TileBase, AudioClip[]> m_Mapping = new();
 
-		private void Start()
+		void Start()
 		{
-			foreach (TileSoundMapping mapping in SoundMappings)
+			foreach (var mapping in SoundMappings)
 			{
-				foreach (TileBase tile in mapping.Tiles)
+				foreach (var tile in mapping.Tiles)
 				{
 					m_Mapping[tile] = mapping.StepSounds;
 				}
@@ -42,8 +44,8 @@ namespace HappyHarvest
 		//This is called by animation event on the walking animation of the character.
 		public void PlayStepSound()
 		{
-			Vector3Int underCell = GameManager.Instance.WalkSurfaceTilemap.WorldToCell(transform.position);
-			TileBase tile = GameManager.Instance.WalkSurfaceTilemap.GetTile(underCell);
+			var underCell = GameManager.Instance.WalkSurfaceTilemap.WorldToCell(transform.position);
+			var tile = GameManager.Instance.WalkSurfaceTilemap.GetTile(underCell);
 
 			SoundManager.Instance.PlaySFXAt(transform.position,
 				(tile != null && m_Mapping.ContainsKey(tile))
@@ -51,7 +53,7 @@ namespace HappyHarvest
 					: GetRandomEntry(DefaultStepSounds), false);
 		}
 
-		private AudioClip GetRandomEntry(AudioClip[] clips)
+		AudioClip GetRandomEntry(AudioClip[] clips)
 		{
 			return clips[Random.Range(0, clips.Length)];
 		}

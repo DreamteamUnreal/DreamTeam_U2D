@@ -23,7 +23,12 @@ namespace HappyHarvest
 
 		public T GetFromID(string uniqueID)
 		{
-			return m_LookupDictionnary.TryGetValue(uniqueID, out T entry) ? entry : null;
+			if (m_LookupDictionnary.TryGetValue(uniqueID, out var entry))
+			{
+				return entry;
+			}
+
+			return null;
 		}
 
 		//This need to be called by whoever use this database to rebuild the lookup.
@@ -34,7 +39,7 @@ namespace HappyHarvest
 			m_LookupDictionnary = new Dictionary<string, T>();
 
 			//rebuild the lookup
-			foreach (T entry in Entries)
+			foreach (var entry in Entries)
 			{
 				if (entry == null)
 				{
@@ -44,7 +49,7 @@ namespace HappyHarvest
 				//TryAdd as there seems to be case where entries are duplicated. My guess is when drag and dropping, it
 				//will first duplicate an entry, which trigger a deserialize THEN assign the new entry, which led to
 				//error.
-				_ = m_LookupDictionnary.TryAdd(entry.Key, entry);
+				m_LookupDictionnary.TryAdd(entry.Key, entry);
 			}
 		}
 	}

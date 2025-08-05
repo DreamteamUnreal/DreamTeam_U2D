@@ -1,3 +1,6 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HappyHarvest
@@ -7,7 +10,7 @@ namespace HappyHarvest
 	/// </summary>
 	public class AmbienceBlender : MonoBehaviour
 	{
-		private enum State
+		enum State
 		{
 			BlendToNight,
 			BlendToDay,
@@ -56,7 +59,7 @@ namespace HappyHarvest
 			}
 		}
 
-		private bool AdvanceBlending()
+		bool AdvanceBlending()
 		{
 			m_CurrentBlendRatio = Mathf.Clamp01(m_CurrentBlendRatio + Time.deltaTime);
 			return Mathf.Approximately(m_CurrentBlendRatio, 1.0f);

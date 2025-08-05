@@ -6,7 +6,12 @@ namespace UnityEngine.Tilemaps
 	{
 		public static string GetTexturePath(Type tileType)
 		{
-			return !tileType.IsSubclassOf(typeof(TileBase)) ? string.Empty : "UnityEngine/Tilemaps/Tile Icon";
+			if (!tileType.IsSubclassOf(typeof(TileBase)))
+			{
+				return String.Empty;
+			}
+
+			return "UnityEngine/Tilemaps/Tile Icon";
 		}
 	}
 }

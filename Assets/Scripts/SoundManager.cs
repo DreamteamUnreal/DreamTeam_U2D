@@ -1,5 +1,5 @@
-//SoundManager.cs
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -37,10 +37,10 @@ namespace Template2DCommon
 
 			for (int i = 0; i < PoolLength; ++i)
 			{
-				GameObject obj = new("SFXPool");
+				GameObject obj = new GameObject("SFXPool");
 				obj.transform.SetParent(transform);
 
-				AudioSource source = Instantiate(SFXReferenceSource);
+				var source = Instantiate(SFXReferenceSource);
 
 				m_SFXPool.Enqueue(source);
 			}
@@ -54,14 +54,14 @@ namespace Template2DCommon
 
 		public void UpdateVolume()
 		{
-			_ = Mixer.SetFloat("MainVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.MainVolume)) * 30.0f);
-			_ = Mixer.SetFloat("SFXVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.SFXVolume)) * 30.0f);
-			_ = Mixer.SetFloat("BGMVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.BGMVolume)) * 30.0f);
+			Mixer.SetFloat("MainVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.MainVolume)) * 30.0f);
+			Mixer.SetFloat("SFXVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.SFXVolume)) * 30.0f);
+			Mixer.SetFloat("BGMVolume", Mathf.Log10(Mathf.Max(0.0001f, Sound.BGMVolume)) * 30.0f);
 		}
 
 		public void PlaySFXAt(Vector3 position, AudioClip clip, bool spatialized)
 		{
-			AudioSource source = m_SFXPool.Dequeue();
+			var source = m_SFXPool.Dequeue();
 
 			source.clip = clip;
 			source.transform.position = position;
@@ -80,13 +80,13 @@ namespace Template2DCommon
 
 		public void Save()
 		{
-			string file = Application.persistentDataPath + "/sound_settings.json";
+			var file = Application.persistentDataPath + "/sound_settings.json";
 			File.WriteAllText(file, JsonUtility.ToJson(Sound));
 		}
 
 		public void Load()
 		{
-			string file = Application.persistentDataPath + "/sound_settings.json";
+			var file = Application.persistentDataPath + "/sound_settings.json";
 			if (File.Exists(file))
 			{
 				JsonUtility.FromJsonOverwrite(File.ReadAllText(file), Sound);
@@ -99,11 +99,6 @@ namespace Template2DCommon
 				Sound.SFXVolume = 1.0f;
 				UpdateVolume();
 			}
-		}
-
-		internal void PlaySFXAt(AudioClip pieCraftSound, Vector3 zero)
-		{
-			throw new NotImplementedException();
 		}
 	}
 }

@@ -1,4 +1,3 @@
-//Crops.cs
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.VFX;
@@ -12,8 +11,6 @@ namespace HappyHarvest
 	public class Crop : ScriptableObject, IDatabaseEntry
 	{
 		public string Key => UniqueID;
-
-		public string ID => throw new System.NotImplementedException();
 
 		public string UniqueID = "";
 

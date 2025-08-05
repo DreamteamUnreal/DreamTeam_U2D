@@ -1,5 +1,5 @@
-//WeatherSystem.cs
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -13,26 +13,27 @@ namespace HappyHarvest
 	public class WeatherSystem : MonoBehaviour
 	{
 		[Flags]
-		public enum WeatherType { Sun, Rain, Thunder }
-		public WeatherType CurrentWeather = WeatherType.Sun;
-
-		public void ChangeWeather(WeatherType newWeather)
+		public enum WeatherType
 		{
-			CurrentWeather = newWeather;
-			Debug.Log($"Weather changed to: {CurrentWeather}");
-			SwitchAllElementsToCurrentWeather();
-			UIHandler.UpdateWeatherIcons(newWeather);
+			Sun = 0x1,
+			Rain = 0x2,
+			Thunder = 0x4
 		}
 
 		public WeatherType StartingWeather;
 
 		private WeatherType m_CurrentWeatherType;
-		private List<WeatherSystemElement> m_Elements = new();
+		private List<WeatherSystemElement> m_Elements = new List<WeatherSystemElement>();
 
-		private void Start()
+		private void Awake()
+		{
+			GameManager.Instance.WeatherSystem = this;
+		}
+
+		void Start()
 		{
 			FindAllElements();
-			//ChangeWeather(StartingWeather);
+			ChangeWeather(StartingWeather);
 		}
 
 		public static void UnregisterElement(WeatherSystemElement element)
@@ -42,7 +43,7 @@ namespace HappyHarvest
 			//allow to be able to previz shadow in editor 
 			if (!Application.isPlaying)
 			{
-				WeatherSystem instance = GameObject.FindFirstObjectByType<WeatherSystem>();
+				var instance = GameObject.FindFirstObjectByType<WeatherSystem>();
 				if (instance != null)
 				{
 					instance.m_Elements.Remove(element);
@@ -57,7 +58,14 @@ namespace HappyHarvest
 #endif
 		}
 
-		private void FindAllElements()
+		public void ChangeWeather(WeatherType newType)
+		{
+			m_CurrentWeatherType = newType;
+			SwitchAllElementsToCurrentWeather();
+			UIHandler.UpdateWeatherIcons(newType);
+		}
+
+		void FindAllElements()
 		{
 			//we use FindObject of type as Object can be disabled in the editor (so they don't play all over each other at edit time)
 			//and that mean their Awake/Start function won't be called, so we can't self register to this WeatherSystem.
@@ -65,9 +73,9 @@ namespace HappyHarvest
 			m_Elements = new(GameObject.FindObjectsByType<WeatherSystemElement>(FindObjectsInactive.Include, FindObjectsSortMode.None));
 		}
 
-		private void SwitchAllElementsToCurrentWeather()
+		void SwitchAllElementsToCurrentWeather()
 		{
-			foreach (WeatherSystemElement element in m_Elements)
+			foreach (var element in m_Elements)
 			{
 				element.gameObject.SetActive(element.WeatherType.HasFlag(m_CurrentWeatherType));
 			}
@@ -100,4 +108,5 @@ namespace HappyHarvest
 		}
 	}
 #endif
+
 }

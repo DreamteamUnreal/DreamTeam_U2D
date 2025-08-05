@@ -1,4 +1,3 @@
-// PlayerController.cs
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,23 +14,32 @@ namespace HappyHarvest
 		public SpriteRenderer Target;
 		public Transform ItemAttachBone;
 
-		[field: SerializeField]
-		public int Coins { get; set; } = 10;
+		public int Coins
+		{
+			get => m_Coins;
+			set
+			{
+				m_Coins = value;
+				UIHandler.UpdateCoins(Coins);
+			}
+		}
 
-		// Pathfinding and Tilemap references
-		private Pathfinding m_Pathfinding;
-		private TileInteractionManager m_TileManager;
-		private List<Vector3Int> m_CurrentPath; // The path the player is currently following
-		private int m_PathIndex;                // Current index in the path
-		public float StoppingDistance = 0.1f; // How close player needs to be to a target cell center
-		private readonly InputAction m_ClickToMoveAction; // New Action for click-to-move input
+		public InventorySystem Inventory => m_Inventory;
+		public Animator Animator => m_Animator;
 
-		[field: SerializeField]
-		public InventorySystem Inventory { get; private set; } // Changed to private set for safety
-		public Animator Animator { get; private set; }
+		//This is private as we don't want to be able to set coins without going through the accessor above that ensure
+		//the UI is updated, but is tagged as SerializedField so it appear in the editor so designer can set the starting
+		//amount of coins
+		[SerializeField]
+		private int m_Coins = 10;
 
-		public CraftingManager CraftingManager { get; private set; }
+		[SerializeField]
+		private InventorySystem m_Inventory;
+
 		private Rigidbody2D m_Rigidbody;
+
+		private Vector3 m_SpawnPosition;
+
 		private InputAction m_MoveAction;
 		private InputAction m_NextItemAction;
 		private InputAction m_PrevItemAction;
@@ -47,66 +55,44 @@ namespace HappyHarvest
 		private bool m_IsOverUI = false;
 
 		private bool m_CanControl = true;
+
+		private Animator m_Animator;
+
 		private InteractiveObject m_CurrentInteractiveTarget = null;
-#pragma warning disable IDE0052 // Remove unread private members
-		private readonly Collider2D[] m_CollidersCache = new Collider2D[8];
-#pragma warning restore IDE0052 // Remove unread private members
+		private Collider2D[] m_CollidersCache = new Collider2D[8];
 
-		private readonly Dictionary<string, ItemInstance> m_ItemVisualInstance = new();
+		private Dictionary<Item, ItemInstance> m_ItemVisualInstance = new();
 
-		private readonly int m_DirXHash = Animator.StringToHash("DirX");
-		private readonly int m_DirYHash = Animator.StringToHash("DirY");
-		private readonly int m_SpeedHash = Animator.StringToHash("Speed");
+		private int m_DirXHash = Animator.StringToHash("DirX");
+		private int m_DirYHash = Animator.StringToHash("DirY");
+		private int m_SpeedHash = Animator.StringToHash("Speed");
 
-		private void Awake()
+		void Awake()
 		{
+			if (GameManager.Instance.Player != null)
+			{
+				Destroy(gameObject);
+				return;
+			}
+
 			m_Rigidbody = GetComponent<Rigidbody2D>();
-			Animator = GetComponentInChildren<Animator>();
+			m_Animator = GetComponentInChildren<Animator>();
 			m_TargetMarker = Target.GetComponent<TargetMarker>();
 			m_TargetMarker.Hide();
 
+			//we can only set DontDestroyOnLoad root object, so ensure its root (Level Designer sometime place the character
+			//prefab already in the scene and can sometime tuck it under other object in the hierarchy)
 			gameObject.transform.SetParent(null);
+
+			GameManager.Instance.Player = this;
 			DontDestroyOnLoad(gameObject);
-
-			// Get references to Pathfinding and TileInteractionManager
-			// Using FindObjectOfType is generally discouraged in Awake for performance,
-			// but for singletons or critical managers, it's often acceptable.
-			// Ensure Script Execution Order is set correctly for these.
-#pragma warning disable CS0618 // Type or member is obsolete
-			m_Pathfinding = FindObjectOfType<Pathfinding>();
-#pragma warning restore CS0618 // Type or member is obsolete
-#pragma warning disable CS0618 // Type or member is obsolete
-			m_TileManager = FindObjectOfType<TileInteractionManager>();
-#pragma warning restore CS0618 // Type or member is obsolete
-
-			if (m_Pathfinding == null)
-			{
-				Debug.LogError("PlayerController: Pathfinding script not found in scene!");
-			}
-
-			if (m_TileManager == null)
-			{
-				Debug.LogError("PlayerController: TileInteractionManager not found in scene!");
-			}
-
-			CraftingManager = GetComponent<CraftingManager>();
-			if (CraftingManager == null)
-			{
-				Debug.LogError("PlayerController: CraftingManager component not found on this GameObject! Crafting will not work.");
-			}
-
-			// Initialize m_ClickToMoveAction here if it's meant to be readonly and assigned once.
-			// If it's part of InputActionAsset, it should be found in Start() or a dedicated input setup method.
-			// As it's readonly, it must be initialized in the constructor or field initializer.
-			// Since it's an InputAction, it's usually managed by InputActionAsset.
-			// Removing the 'readonly' modifier for now, assuming it's assigned in Start() from InputActionAsset.
-			// If it was truly readonly, it would need to be initialized in the constructor.
-			// For now, let's assume it's assigned in Start() like other actions.
-			// m_ClickToMoveAction = InputAction.FindAction("Gameplay/ClickToMove"); // Example if you add this action
 		}
 
-		private void Start()
+		void Start()
 		{
+			//Retrieve the action from the InputAction asset, enable them and add the callbacks.
+
+			//Move action doesn't have any callback as it will be polled in the movement code directly.
 			m_MoveAction = InputAction.FindAction("Gameplay/Move");
 			m_MoveAction.Enable();
 
@@ -117,7 +103,7 @@ namespace HappyHarvest
 			m_NextItemAction.performed += context =>
 			{
 				ToggleToolVisual(false);
-				Inventory.EquipNext();
+				m_Inventory.EquipNext();
 				ToggleToolVisual(true);
 			};
 
@@ -125,7 +111,7 @@ namespace HappyHarvest
 			m_PrevItemAction.performed += context =>
 			{
 				ToggleToolVisual(false);
-				Inventory.EquipPrev();
+				m_Inventory.EquipPrev();
 				ToggleToolVisual(true);
 			};
 
@@ -136,17 +122,9 @@ namespace HappyHarvest
 
 			m_CurrentLookDirection = Vector2.right;
 
-			// Ensure Inventory is assigned in the Inspector before Init() is called.
-			// If Inventory is null here, it will cause a NullReferenceException.
-			if (Inventory == null)
-			{
-				Debug.LogError("PlayerController: InventorySystem is not assigned in the Inspector!");
-				enabled = false; // Disable script to prevent further errors
-				return;
-			}
-			Inventory.Init();
+			m_Inventory.Init();
 
-			foreach (InventorySlot entry in Inventory.Entries)
+			foreach (var entry in m_Inventory.Entries)
 			{
 				if (entry.Item != null)
 				{
@@ -154,11 +132,12 @@ namespace HappyHarvest
 				}
 			}
 			ToggleToolVisual(true);
-			Debug.LogWarning("PlayerController Start: UIHandler.s_Instance is null. UI updates might be delayed or fail.");
+
+			UIHandler.UpdateInventory(m_Inventory);
+			UIHandler.UpdateCoins(m_Coins);
 		}
 
-		[System.Obsolete]
-		private void Update() // Removed [System.Obsolete] as it's a standard Unity method
+		private void Update()
 		{
 			m_IsOverUI = EventSystem.current.IsPointerOverGameObject();
 			m_CurrentInteractiveTarget = null;
@@ -176,37 +155,38 @@ namespace HappyHarvest
 				{
 					UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
 				}
+
 				return;
 			}
 
 			m_CurrentWorldMousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-			Collider2D overlapCol = Physics2D.OverlapPoint(m_CurrentWorldMousePos, 1 << 31); // Layer 31 for InteractiveObjects
+			//check if we are above an interactive object
+			var overlapCol = Physics2D.OverlapPoint(m_CurrentWorldMousePos, 1 << 31);
 
 			if (overlapCol != null)
 			{
 				m_CurrentInteractiveTarget = overlapCol.GetComponent<InteractiveObject>();
-				m_HasTarget = false; // Player is targeting an interactive object, not a tile
+				m_HasTarget = false;
 				UIHandler.ChangeCursor(UIHandler.CursorType.Interact);
 				return;
 			}
 
+
+			//If we reached here, we are not above UI or an interactive object, so set the cursor to the normal one
 			UIHandler.ChangeCursor(UIHandler.CursorType.Normal);
 
-			// CRITICAL NULL CHECK HERE: GameManager.Instance.Terrain
-			// This is the line that was causing the error.
-			// If GameManager.Instance or GameManager.Instance.Terrain is null,
-			// the Script Execution Order is the most likely culprit.
-			Grid grid = GameManager.Instance?.Terrain?.Grid;
+			var grid = GameManager.Instance.Terrain?.Grid;
 
+			//some scene may not have a terrain (interior scene)
 			if (grid != null)
 			{
-				Vector3Int currentCell = grid.WorldToCell(transform.position);
-				Vector3Int pointedCell = grid.WorldToCell(m_CurrentWorldMousePos);
+				var currentCell = grid.WorldToCell(transform.position);
+				var pointedCell = grid.WorldToCell(m_CurrentWorldMousePos);
 
 				currentCell.z = 0;
 				pointedCell.z = 0;
 
-				Vector3Int toTarget = pointedCell - currentCell;
+				var toTarget = pointedCell - currentCell;
 
 				if (Mathf.Abs(toTarget.x) > 1)
 				{
@@ -218,10 +198,12 @@ namespace HappyHarvest
 					toTarget.y = (int)Mathf.Sign(toTarget.y);
 				}
 
+
 				m_CurrentTarget = currentCell + toTarget;
 				Target.transform.position = GameManager.Instance.Terrain.Grid.GetCellCenterWorld(m_CurrentTarget);
 
-				if (Inventory.EquippedItem != null && Inventory.EquippedItem.CanUse(m_CurrentTarget))
+				if (m_Inventory.EquippedItem != null
+					&& m_Inventory.EquippedItem.CanUse(m_CurrentTarget))
 				{
 					m_HasTarget = true;
 					m_TargetMarker.Activate();
@@ -232,34 +214,17 @@ namespace HappyHarvest
 				}
 			}
 
-			if (Keyboard.current != null)
+			if (Keyboard.current.f5Key.wasPressedThisFrame)
 			{
-				if (Keyboard.current.f5Key.wasPressedThisFrame)
-				{
-					SaveSystem.Save();
-				}
-				else if (Keyboard.current.f9Key.wasPressedThisFrame)
-				{
-					SaveSystem.Load();
-				}
-				// Example: Open Crafting Menu with 'C' key
-				else if (Keyboard.current.cKey.wasPressedThisFrame)
-				{
-					UIHandler.OpenCraftingMenu();
-				}
-				// Example: Open Settings Menu with 'Escape' key
-				else if (Keyboard.current.escapeKey.wasPressedThisFrame)
-				{
-					UIHandler.OpenSettingMenu();
-				}
+				SaveSystem.Save();
 			}
-			else
+			else if (Keyboard.current.f9Key.wasPressedThisFrame)
 			{
-				Debug.LogWarning("Keyboard.current is null. Input system might not be initialized yet.");
+				SaveSystem.Load();
 			}
 		}
 
-		private void UseObject()
+		void UseObject()
 		{
 			if (m_IsOverUI)
 			{
@@ -272,12 +237,7 @@ namespace HappyHarvest
 				return;
 			}
 
-			// Only allow item use if an item is equipped AND it either doesn't need a target, or a valid target exists
-			// You need to add a 'NeedTarget()' method to your Item.cs if you want to use this.
-			// public virtual bool NeedTarget() { return false; } in Item.cs
-			// and override in Tool/Seed etc.
-			// For now, I'll comment out the NeedTarget() check to avoid compilation errors if it's missing.
-			if (Inventory.EquippedItem != null /* && m_Inventory.EquippedItem.NeedTarget() */ && !m_HasTarget)
+			if (m_Inventory.EquippedItem != null && m_Inventory.EquippedItem.NeedTarget() && !m_HasTarget)
 			{
 				return;
 			}
@@ -285,99 +245,105 @@ namespace HappyHarvest
 			UseItem();
 		}
 
-		private void FixedUpdate()
+		void FixedUpdate()
 		{
-			Vector2 move = m_MoveAction.ReadValue<Vector2>();
-			FollowPath(); // This handles pathfinding movement
+			var move = m_MoveAction.ReadValue<Vector2>();
 
-			// If not actively following a path, allow direct input movement
-			if (m_CurrentPath == null || m_CurrentPath.Count == 0)
+			//note: == and != for vector2 is overriden to take in account floating point imprecision.
+			if (move != Vector2.zero)
 			{
-				if (move != Vector2.zero)
-				{
-					SetLookDirectionFrom(move);
-				}
-				else
-				{
-					if (IsMouseOverGameWindow())
-					{
-						Vector3 posToMouse = m_CurrentWorldMousePos - transform.position;
-						SetLookDirectionFrom(posToMouse);
-					}
-				}
-
-				Vector2 movement = move * Speed;
-				float speed = movement.sqrMagnitude;
-
-				Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
-				Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
-				Animator.SetFloat(m_SpeedHash, speed);
-
-				m_Rigidbody.MovePosition(m_Rigidbody.position + (movement * Time.deltaTime));
+				SetLookDirectionFrom(move);
 			}
-			// If following a path, FollowPath() already handles movement and animation parameters
+			else
+			{
+				//we aren't moving, look direction is based on the currently aimed toward point
+				if (IsMouseOverGameWindow())
+				{
+					Vector3 posToMouse = m_CurrentWorldMousePos - transform.position;
+					SetLookDirectionFrom(posToMouse);
+				}
+			}
+
+			var movement = move * Speed;
+			var speed = movement.sqrMagnitude;
+
+			m_Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
+			m_Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
+			m_Animator.SetFloat(m_SpeedHash, speed);
+
+			m_Rigidbody.MovePosition(m_Rigidbody.position + movement * Time.deltaTime);
 		}
 
-		private bool IsMouseOverGameWindow()
+		bool IsMouseOverGameWindow()
 		{
 			return !(0 > Input.mousePosition.x || 0 > Input.mousePosition.y || Screen.width < Input.mousePosition.x || Screen.height < Input.mousePosition.y);
 		}
 
-		private void SetLookDirectionFrom(Vector2 direction)
+		void SetLookDirectionFrom(Vector2 direction)
 		{
-			m_CurrentLookDirection = Mathf.Abs(direction.x) > Mathf.Abs(direction.y)
-				? direction.x > 0 ? Vector2.right : Vector2.left
-				: direction.y > 0 ? Vector2.up : Vector2.down;
+			if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+			{
+				m_CurrentLookDirection = direction.x > 0 ? Vector2.right : Vector2.left;
+			}
+			else
+			{
+				m_CurrentLookDirection = direction.y > 0 ? Vector2.up : Vector2.down;
+			}
 		}
 
 		public bool CanFitInInventory(Item item, int count)
 		{
-			return Inventory.CanFitItem(item, count);
+			return m_Inventory.CanFitItem(item, count);
 		}
 
 		public bool AddItem(Item newItem)
 		{
 			CreateItemVisual(newItem);
-			return Inventory.AddItem(newItem);
+			return m_Inventory.AddItem(newItem);
 		}
 
 		public void SellItem(int inventoryIndex, int count)
 		{
-			if (inventoryIndex < 0 || inventoryIndex >= Inventory.Entries.Length)
+			if (inventoryIndex < 0 || inventoryIndex > Inventory.Entries.Length)
 			{
 				return;
 			}
 
-			Item item = Inventory.Entries[inventoryIndex].Item;
+			var item = Inventory.Entries[inventoryIndex].Item;
 
-			if (item == null || item is not Product product) // Ensure 'Product' class exists and inherits from 'Item'
+			if (item == null || !(item is Product product))
 			{
 				return;
 			}
 
-			int actualCount = Inventory.Remove(inventoryIndex, count);
+			int actualCount = m_Inventory.Remove(inventoryIndex, count);
 
-			Coins += actualCount * product.SellPrice;
-			UIHandler.UpdateCoins(Coins);
+			m_Coins += actualCount * product.SellPrice;
+			UIHandler.UpdateCoins(m_Coins);
+			UIHandler.PlayBuySellSound(transform.position);
 		}
 
 		public bool BuyItem(Item item)
 		{
-			if (item.BuyPrice > Coins)
+			if (item.BuyPrice > m_Coins)
 			{
 				return false;
 			}
 
-			Coins -= item.BuyPrice;
-			UIHandler.UpdateCoins(Coins);
-			_ = AddItem(item);
+			m_Coins -= item.BuyPrice;
+			UIHandler.UpdateCoins(m_Coins);
+			UIHandler.PlayBuySellSound(transform.position);
+			AddItem(item);
 			return true;
 		}
 
 		public void ChangeEquipItem(int index)
 		{
+			//Disable the current item if there is one 
 			ToggleToolVisual(false);
-			Inventory.EquipItem(index);
+
+			m_Inventory.EquipItem(index);
+
 			ToggleToolVisual(true);
 		}
 
@@ -386,44 +352,43 @@ namespace HappyHarvest
 			m_CanControl = canControl;
 			if (canControl)
 			{
-				m_ClickToMoveAction?.Enable();
-				m_MoveAction?.Enable();
-				m_NextItemAction?.Enable();
-				m_PrevItemAction?.Enable();
-				m_UseItemAction?.Enable();
+				m_MoveAction.Enable();
+				m_NextItemAction.Enable();
+				m_PrevItemAction.Enable();
+				m_UseItemAction.Enable();
 			}
 			else
 			{
-				StopMovement();
-				m_ClickToMoveAction?.Disable();
-				m_MoveAction?.Disable();
-				m_NextItemAction?.Disable();
-				m_PrevItemAction?.Disable();
-				m_UseItemAction?.Disable();
+				m_MoveAction.Disable();
+				m_NextItemAction.Disable();
+				m_PrevItemAction.Disable();
+				m_UseItemAction.Disable();
 			}
 		}
 
 		public void UseItem()
 		{
-			if (Inventory.EquippedItem == null)
+			if (m_Inventory.EquippedItem == null)
 			{
 				return;
 			}
 
-			Item previousEquipped = Inventory.EquippedItem;
+			var previousEquipped = m_Inventory.EquippedItem;
 
-			Inventory.UseEquippedObject(m_CurrentTarget);
+			m_Inventory.UseEquippedObject(m_CurrentTarget);
 
-			// Use ItemID as key for m_ItemVisualInstance dictionary
-			if (previousEquipped != null && m_ItemVisualInstance.ContainsKey(previousEquipped.ItemID))
+			if (m_ItemVisualInstance.ContainsKey(previousEquipped))
 			{
-				ItemInstance visual = m_ItemVisualInstance[previousEquipped.ItemID];
+				var visual = m_ItemVisualInstance[previousEquipped];
+
+				m_Animator.SetTrigger(visual.AnimatorHash);
 
 				if (visual.Animator != null)
 				{
 					if (!visual.Instance.activeInHierarchy)
 					{
-						Transform current = visual.Instance.transform;
+						//enable all parent as if it's disabled, value cannot be set
+						var current = visual.Instance.transform;
 						while (current != null)
 						{
 							current.gameObject.SetActive(true);
@@ -437,16 +402,18 @@ namespace HappyHarvest
 				}
 			}
 
-			if (Inventory.EquippedItem == null)
+			if (m_Inventory.EquippedItem == null)
 			{
+				//this mean we finished using an item, the entry is now empty, so we need to disable the visual if any
 				if (previousEquipped != null)
 				{
-					_ = StartCoroutine(DelayedObjectDisable(previousEquipped));
+					//This is a bit of a quick fix, this will let any animation to finish playing before we disable the visual.
+					StartCoroutine(DelayedObjectDisable(previousEquipped));
 				}
 			}
 		}
 
-		private IEnumerator DelayedObjectDisable(Item item)
+		IEnumerator DelayedObjectDisable(Item item)
 		{
 			yield return new WaitForSeconds(1.0f);
 			ToggleVisualExplicit(false, item);
@@ -455,46 +422,43 @@ namespace HappyHarvest
 		public void Save(ref PlayerSaveData data)
 		{
 			data.Position = m_Rigidbody.position;
-			data.Coins = Coins;
+			data.Coins = m_Coins;
 			data.Inventory = new List<InventorySaveData>();
-			Inventory.Save(ref data.Inventory);
+			m_Inventory.Save(ref data.Inventory);
 		}
 
 		public void Load(PlayerSaveData data)
 		{
-			Coins = data.Coins;
-			Inventory.Load(data.Inventory);
+			m_Coins = data.Coins;
+			m_Inventory.Load(data.Inventory);
 
 			m_Rigidbody.position = data.Position;
 		}
 
-		private void ToggleToolVisual(bool enable)
+		void ToggleToolVisual(bool enable)
 		{
-			// Use ItemID as key for m_ItemVisualInstance dictionary
-			if (Inventory.EquippedItem != null && m_ItemVisualInstance.TryGetValue(Inventory.EquippedItem.ItemID, out ItemInstance itemVisual))
+			if (m_Inventory.EquippedItem != null && m_ItemVisualInstance.TryGetValue(m_Inventory.EquippedItem, out var itemVisual))
 			{
 				itemVisual.Instance.SetActive(enable);
 			}
 		}
 
-		private void ToggleVisualExplicit(bool enable, Item item)
+		void ToggleVisualExplicit(bool enable, Item item)
 		{
-			// Use ItemID as key for m_ItemVisualInstance dictionary
-			if (item != null && m_ItemVisualInstance.TryGetValue(item.ItemID, out ItemInstance itemVisual))
+			if (item != null && m_ItemVisualInstance.TryGetValue(item, out var itemVisual))
 			{
 				itemVisual.Instance.SetActive(enable);
 			}
 		}
 
-		private void CreateItemVisual(Item item)
+		void CreateItemVisual(Item item)
 		{
-			// Use ItemID as key for m_ItemVisualInstance dictionary
-			if (item.VisualPrefab != null && !m_ItemVisualInstance.ContainsKey(item.ItemID))
+			if (item.VisualPrefab != null && !m_ItemVisualInstance.ContainsKey(item))
 			{
-				GameObject newVisual = Instantiate(item.VisualPrefab, ItemAttachBone, false);
+				var newVisual = Instantiate(item.VisualPrefab, ItemAttachBone, false);
 				newVisual.SetActive(false);
 
-				m_ItemVisualInstance[item.ItemID] = new ItemInstance()
+				m_ItemVisualInstance[item] = new ItemInstance()
 				{
 					Instance = newVisual,
 					Animator = newVisual.GetComponentInChildren<Animator>(),
@@ -502,72 +466,9 @@ namespace HappyHarvest
 				};
 			}
 		}
-
-		private void FollowPath()
-		{
-			if (m_CurrentPath == null || m_PathIndex >= m_CurrentPath.Count)
-			{
-				StopMovement();
-				return;
-			}
-
-			Vector3Int targetCell = m_CurrentPath[m_PathIndex];
-			Vector3 targetWorldPos = m_TileManager.CellToWorld(targetCell);
-			targetWorldPos.z = transform.position.z;
-
-			Vector2 direction = (targetWorldPos - transform.position).normalized;
-
-			m_Rigidbody.MovePosition(m_Rigidbody.position + (direction * Speed * Time.deltaTime));
-
-			float currentSpeedMagnitude = direction.magnitude > 0.01f ? Speed : 0;
-			Animator.SetFloat(m_SpeedHash, currentSpeedMagnitude);
-
-			if (direction != Vector2.zero)
-			{
-				SetLookDirectionFrom(direction);
-			}
-
-			Animator.SetFloat(m_DirXHash, m_CurrentLookDirection.x);
-			Animator.SetFloat(m_DirYHash, m_CurrentLookDirection.y);
-
-			if (Vector2.Distance(transform.position, targetWorldPos) < StoppingDistance)
-			{
-				m_PathIndex++;
-				if (m_PathIndex >= m_CurrentPath.Count)
-				{
-					StopMovement();
-				}
-			}
-		}
-
-		private void StopMovement()
-		{
-#pragma warning disable CS0618 // Type or member is obsolete
-			m_Rigidbody.velocity = Vector2.zero;
-#pragma warning restore CS0618 // Type or member is obsolete
-			m_CurrentPath = null;
-			m_PathIndex = 0;
-			Animator.SetFloat(m_SpeedHash, 0);
-		}
-
-		private void OnDrawGizmos()
-		{
-			if (m_CurrentPath != null && m_TileManager != null)
-			{
-				Gizmos.color = Color.blue;
-				for (int i = 0; i < m_CurrentPath.Count; i++)
-				{
-					Gizmos.DrawSphere(m_TileManager.CellToWorld(m_CurrentPath[i]), 0.2f);
-					if (i < m_CurrentPath.Count - 1)
-					{
-						Gizmos.DrawLine(m_TileManager.CellToWorld(m_CurrentPath[i]), m_TileManager.CellToWorld(m_CurrentPath[i + 1]));
-					}
-				}
-			}
-		}
 	}
 
-	internal class ItemInstance
+	class ItemInstance
 	{
 		public GameObject Instance;
 		public Animator Animator;
@@ -578,6 +479,7 @@ namespace HappyHarvest
 	public struct PlayerSaveData
 	{
 		public Vector3 Position;
+
 		public int Coins;
 		public List<InventorySaveData> Inventory;
 	}

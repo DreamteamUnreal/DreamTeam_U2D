@@ -18,7 +18,7 @@ namespace HappyHarvest
 		private Color _initialColor;
 		private Color col;
 
-		private void Start()
+		void Start()
 		{
 			//curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
 			curve.preWrapMode = WrapMode.Once;
@@ -41,12 +41,12 @@ namespace HappyHarvest
 
 		private void OnTriggerEnter2D(Collider2D col)
 		{
-			_ = StartCoroutine(AnimCurve(_initialColor.a, finalAlpha));
+			StartCoroutine(AnimCurve(_initialColor.a, finalAlpha));
 		}
 
 		private void OnTriggerExit2D(Collider2D other)
 		{
-			_ = StartCoroutine(AnimCurve(finalAlpha, _initialColor.a));
+			StartCoroutine(AnimCurve(finalAlpha, _initialColor.a));
 
 		}
 
@@ -57,7 +57,7 @@ namespace HappyHarvest
 			while (i < 1)
 			{
 				i += rate * Time.deltaTime;
-				float resultValue = Mathf.Lerp(initialPosition, finalPosition, curve.Evaluate(i));
+				var resultValue = Mathf.Lerp(initialPosition, finalPosition, curve.Evaluate(i));
 				col.a = resultValue;
 				if (tilemap != null)
 				{

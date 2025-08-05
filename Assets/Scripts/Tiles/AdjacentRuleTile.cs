@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -12,7 +14,7 @@ namespace HappyHarvest
 	[CreateAssetMenu]
 	public class AdjacentRuleTile : RuleTile<AdjacentRuleTile.Neighbor>
 	{
-		public class Neighbor : TilingRuleOutput.Neighbor
+		public class Neighbor : RuleTile.TilingRule.Neighbor
 		{
 			public const int Adjacent = 3;
 		}
@@ -22,11 +24,15 @@ namespace HappyHarvest
 		public override bool RuleMatch(int neighbor, TileBase other)
 		{
 
-			return neighbor switch
+			switch (neighbor)
 			{
-				Neighbor.Adjacent => AdjacentTiles.Contains(other),
-				_ => base.RuleMatch(neighbor, other),
-			};
+				case Neighbor.Adjacent:
+					return AdjacentTiles.Contains(other);
+				default:
+					break;
+			}
+
+			return base.RuleMatch(neighbor, other);
 		}
 	}
 }

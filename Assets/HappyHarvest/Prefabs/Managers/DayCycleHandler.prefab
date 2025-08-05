@@ -24,13 +24,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4046695730945650838}
-  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -14.92, y: 13.608001, z: -12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4046695730945650840
 MonoBehaviour:
@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc8fb613d11589342b357dd6a3787bac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LightsRoot: {fileID: 4046695730945650841}
+  LightsRoot: {fileID: 0}
   DayLight: {fileID: 0}
   DayLightGradient:
     serializedVersion: 2
@@ -200,6 +200,9 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 4
     m_NumAlphaKeys: 2
+  DayDurationInSeconds: 120
+  StartingTime: 30
+  SunHeight: 0.8
   ShadowAngle:
     serializedVersion: 2
     m_Curve:

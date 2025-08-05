@@ -1,5 +1,7 @@
 using UnityEngine;
 using Random = UnityEngine.Random;
+using UnityEngine.U2D;
+using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.Rendering.Universal;
 
 namespace HappyHarvest
@@ -24,11 +26,12 @@ namespace HappyHarvest
 
 		private Light2D m_Light;
 
-		public float FlickerIntensityOffset { get; private set; } = 1f;
-		public float ModifiedIntensity => m_InitialIntensity + FlickerIntensityOffset;
+		private float m_flickerIntensityOffset = 1f;
+		public float flickerIntensityOffset => m_flickerIntensityOffset;
+		public float modifiedIntensity => m_InitialIntensity + m_flickerIntensityOffset;
 
 
-		private void Start()
+		void Start()
 		{
 			Random.InitState(gameObject.GetInstanceID());
 			m_XSeed = Random.value * 248;
@@ -41,19 +44,19 @@ namespace HappyHarvest
 			m_InitialRotation = transform.rotation;
 		}
 
-		private void Update()
+		void Update()
 		{
-			float x = (Time.time * m_Timescale) + m_XSeed;
-			float y = (Time.time * m_Timescale) + m_YSeed;
-			float z = (Time.time * m_Timescale) + m_ZSeed;
+			float x = Time.time * m_Timescale + m_XSeed;
+			float y = Time.time * m_Timescale + m_YSeed;
+			float z = Time.time * m_Timescale + m_ZSeed;
 
 			Vector3 Noise = PerlinNoise3D(new Vector3(x, y, z), 2, 1);
-			Noise = (Noise * 2) - Vector3.one;
+			Noise = Noise * 2 - Vector3.one;
 
-			transform.SetPositionAndRotation(m_InitialPosition + (Noise * m_PositionJitterScale), m_InitialRotation * Quaternion.Euler(Noise * m_RotationJitterScale)); //Nice!
+			transform.SetPositionAndRotation(m_InitialPosition + Noise * m_PositionJitterScale, m_InitialRotation * Quaternion.Euler(Noise * m_RotationJitterScale)); //Nice!
 
-			FlickerIntensityOffset = Noise.x * m_IntensityJitterScale;
-			m_Light.intensity = ModifiedIntensity;
+			m_flickerIntensityOffset = Noise.x * m_IntensityJitterScale;
+			m_Light.intensity = modifiedIntensity;
 		}
 
 		private Vector3 PerlinNoise3D(Vector3 uv, int Octaves, float freq)

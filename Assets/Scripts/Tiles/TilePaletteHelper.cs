@@ -22,19 +22,19 @@ namespace UnityEngine.Tilemaps
 				return;
 			}
 
-			BoundsInt bounds = tilemap.cellBounds;
-			int boundsSize = bounds.size.x * bounds.size.y * bounds.size.z;
+			var bounds = tilemap.cellBounds;
+			var boundsSize = bounds.size.x * bounds.size.y * bounds.size.z;
 			if (tiles == null || boundsSize != tiles.Length)
 			{
 				Array.Resize(ref tiles, boundsSize);
 			}
 
-			_ = tilemap.GetTilesBlockNonAlloc(bounds, tiles);
+			tilemap.GetTilesBlockNonAlloc(bounds, tiles);
 
-			int i = 0;
-			foreach (Vector3Int position in bounds.allPositionsWithin)
+			var i = 0;
+			foreach (var position in bounds.allPositionsWithin)
 			{
-				TileBase tile = tiles[i++];
+				var tile = tiles[i++];
 				if (tile == null)
 				{
 					continue;
@@ -45,7 +45,7 @@ namespace UnityEngine.Tilemaps
 					continue;
 				}
 
-				Vector3 localPosition = tilemap.CellToLocalInterpolated(position + tilemap.tileAnchor);
+				var localPosition = tilemap.CellToLocalInterpolated(position + tilemap.tileAnchor);
 				Gizmos.DrawIcon(localPosition, TilePaletteIconsPreference.GetTexturePath(tile.GetType()));
 			}
 		}

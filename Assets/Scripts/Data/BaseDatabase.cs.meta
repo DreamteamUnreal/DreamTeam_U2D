@@ -6,5 +6,5 @@ AssetOrigin:
   productId: 259218
   packageName: Happy Harvest - 2D Sample Project
   packageVersion: 1.61
-  assetPath: Assets/HappyHarvest/Scripts/Data/BaseDatabase.cs
+  assetPath: Assets/Scripts/Data/BaseDatabase.cs
   uploadId: 722366

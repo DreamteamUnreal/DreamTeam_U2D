@@ -1,3 +1,7 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using HappyHarvest;
 using UnityEngine;
 
 namespace HappyHarvest
@@ -9,15 +13,23 @@ namespace HappyHarvest
 	/// </summary>
 	public class CharacterAnimationEventHandler : MonoBehaviour
 	{
-#pragma warning disable IDE0052 // Remove unread private members
 		private PlayerController m_Controller;
-#pragma warning restore IDE0052 // Remove unread private members
 
 		private void Awake()
 		{
 			//Get In Parent as this is on the GameObject with the animator and the controller is at the root of the
 			//character.
 			m_Controller = GetComponentInParent<PlayerController>();
+		}
+
+		void LockControl()
+		{
+			m_Controller.ToggleControl(false);
+		}
+
+		void UnlockControl()
+		{
+			m_Controller.ToggleControl(true);
 		}
 	}
 }

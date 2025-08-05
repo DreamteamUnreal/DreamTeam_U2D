@@ -1,5 +1,8 @@
-//SceneTransition.cs
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace HappyHarvest
 {
@@ -9,7 +12,6 @@ namespace HappyHarvest
 		public int TargetSceneBuildIndex;
 		public int TargetSpawnIndex;
 
-		[System.Obsolete]
 		private void OnTriggerEnter2D(Collider2D col)
 		{
 			GameManager.Instance.MoveTo(TargetSceneBuildIndex, TargetSpawnIndex);

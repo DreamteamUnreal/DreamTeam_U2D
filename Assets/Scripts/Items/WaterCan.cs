@@ -9,5 +9,11 @@ namespace HappyHarvest
 		{
 			return GameManager.Instance.Terrain.IsTilled(target);
 		}
+
+		public override bool Use(Vector3Int target)
+		{
+			GameManager.Instance.Terrain.WaterAt(target);
+			return true;
+		}
 	}
 }

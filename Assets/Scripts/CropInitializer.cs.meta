@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 259218
   packageName: Happy Harvest - 2D Sample Project
   packageVersion: 1.61
-  assetPath: Assets/HappyHarvest/Scripts/CropInitializer.cs
+  assetPath: Assets/Scripts/CropInitializer.cs
   uploadId: 722366

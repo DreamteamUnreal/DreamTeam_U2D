@@ -1,4 +1,6 @@
-//CameraSetter.cs
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -13,7 +15,8 @@ namespace HappyHarvest
 	{
 		private void Awake()
 		{
-			_ = GetComponent<CinemachineCamera>();
+			var cam = GetComponent<CinemachineCamera>();
+			GameManager.Instance.MainCamera = cam;
 		}
 	}
 }

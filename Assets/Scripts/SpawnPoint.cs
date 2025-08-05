@@ -1,8 +1,10 @@
-//SpawnPoint.cs
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
 
 namespace HappyHarvest
 {
@@ -23,9 +25,16 @@ namespace HappyHarvest
 
 		public void SpawnHere()
 		{
-			Transform playerTransform = GameManager.Instance.Player.transform;
+			var playerTransform = GameManager.Instance.Player.transform;
 
 			playerTransform.position = transform.position;
+
+			if (GameManager.Instance.MainCamera != null)
+			{//some scene, like interior, may have fixed camera, so no need to change anything
+				GameManager.Instance.MainCamera.Follow = playerTransform;
+				GameManager.Instance.MainCamera.LookAt = playerTransform;
+				GameManager.Instance.MainCamera.ForceCameraPosition(playerTransform.position, Quaternion.identity);
+			}
 		}
 	}
 
@@ -38,8 +47,8 @@ namespace HappyHarvest
 			base.OnInspectorGUI();
 
 			SpawnPoint[] transitions = GameObject.FindObjectsByType<SpawnPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-			SpawnPoint local = target as SpawnPoint;
-			foreach (SpawnPoint transition in transitions)
+			var local = target as SpawnPoint;
+			foreach (var transition in transitions)
 			{
 				if (transition == local)
 				{
